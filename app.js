@@ -630,20 +630,6 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.log('Botón principal de desuscripción no encontrado');
     }
-    
-    // Botón de desuscripción en el dropdown
-    const dropdownUnsubscribeButton = document.getElementById('dropdownUnsubscribeButton');
-    if (dropdownUnsubscribeButton) {
-        console.log('Botón de desuscripción del dropdown encontrado');
-        dropdownUnsubscribeButton.addEventListener('click', function(e) {
-            console.log('Botón de desuscripción del dropdown clickeado');
-            e.preventDefault();
-            e.stopPropagation(); // Prevenir propagación del evento
-            unsubscribe();
-        });
-    } else {
-        console.log('Botón de desuscripción del dropdown no encontrado');
-    }
 });
 
 // Función para conectar con MetaMask
@@ -729,13 +715,6 @@ async function connectWallet() {
     }
 }
 
-// Evento de clic en el botón de conexión
-document.addEventListener('DOMContentLoaded', function() {
-    const connectButton = document.getElementById('connectWallet');
-    if (connectButton) {
-        connectButton.addEventListener('click', connectWallet);
-    }
-});
 
 // Verificar si ya está conectado al cargar la página
 window.addEventListener('load', async () => {
@@ -863,6 +842,10 @@ function disconnectWallet() {
         // Limpiar la dirección de la wallet
         userAddress = null;
         
+        // Cerrar el dropdown
+        const dropdown = document.getElementById('walletDropdown');
+        if (dropdown) dropdown.classList.add('hidden');
+        
         // Verificar que los elementos existan antes de actualizarlos
         if (elementExists('walletText')) {
             document.getElementById('walletText').textContent = 'Conectar Wallet';
@@ -884,6 +867,9 @@ function disconnectWallet() {
             document.getElementById('balance').textContent = `0 ${getNativeSymbol()}`;
         }
         
+        // Resetear estado de suscripción
+        isSubscribed = false;
+        
         console.log('Wallet desconectada exitosamente');
     } catch (error) {
         console.error('Error al desconectar la wallet:', error);
@@ -903,6 +889,10 @@ function disconnectWallet() {
         if (elementExists('balance')) {
             document.getElementById('balance').textContent = `0 ${getNativeSymbol()}`;
         }
+        
+        // Cerrar el dropdown en caso de error
+        const dropdown = document.getElementById('walletDropdown');
+        if (dropdown) dropdown.classList.add('hidden');
     }
 }
 
@@ -1088,6 +1078,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 b.classList.remove('active');
             });
             e.currentTarget.classList.add('active');
+            
+            // Controlar visibilidad de la esfera 3D
+            if (window.morphoParticles) {
+                if (key === 'home') {
+                    window.morphoParticles.showSphere();
+                } else {
+                    window.morphoParticles.hideSphere();
+                }
+            }
             
             showSection(finalKey);
         });
@@ -1521,12 +1520,9 @@ function updateWalletDropdown() {
     const dropdown = document.getElementById('walletDropdown');
     const walletAddress = document.getElementById('walletAddress');
     const walletNetwork = document.getElementById('walletNetwork');
-    const dropdownSubscriptionStatus = document.getElementById('dropdownSubscriptionStatus');
     const dropdownBalance = document.getElementById('dropdownBalance');
-    const dropdownSubscribeButton = document.getElementById('dropdownSubscribeButton');
-    const dropdownUnsubscribeButton = document.getElementById('dropdownUnsubscribeButton');
 
-    if (userAddress && dropdown && walletAddress && dropdownSubscriptionStatus && dropdownBalance && dropdownSubscribeButton && dropdownUnsubscribeButton) {
+    if (userAddress && dropdown && walletAddress && dropdownBalance) {
         walletAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
         dropdownBalance.textContent = document.getElementById('balance') ? document.getElementById('balance').textContent : '0 ETH';
         
@@ -1535,20 +1531,6 @@ function updateWalletDropdown() {
             const networkKey = getSelectedNetworkKey();
             const network = NETWORKS[networkKey];
             walletNetwork.textContent = network ? network.chainName : 'Desconocida';
-        }
-        
-        if (isSubscribed) {
-            dropdownSubscriptionStatus.textContent = 'Miembro';
-            dropdownSubscriptionStatus.classList.add('text-green-400');
-            dropdownSubscriptionStatus.classList.remove('text-red-400');
-            dropdownSubscribeButton.classList.add('hidden');
-            dropdownUnsubscribeButton.classList.remove('hidden');
-        } else {
-            dropdownSubscriptionStatus.textContent = 'No miembro';
-            dropdownSubscriptionStatus.classList.add('text-red-400');
-            dropdownSubscriptionStatus.classList.remove('text-green-400');
-            dropdownSubscribeButton.classList.remove('hidden');
-            dropdownUnsubscribeButton.classList.add('hidden');
         }
     }
 }
@@ -1728,7 +1710,7 @@ async function invest(amount) {
     // Establecer título del chat con la marca actual visible en la página
     const detectedBrand = (document.querySelector('nav .nav-brand')?.textContent || '').trim() || 'Impulso Web3';
     if (chatTitle) {
-        chatTitle.textContent = `Asistente ${detectedBrand}`;
+        chatTitle.textContent = 'Luna AI';
     }
 
     function appendMessage(role, text) {
@@ -1748,13 +1730,22 @@ async function invest(amount) {
 
     function setLoading(isLoading) {
         if (isLoading) {
-            appendMessage('bot', 'Pensando...');
+            const wrapper = document.createElement('div');
+            wrapper.className = 'msg bot loading-msg';
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar bot';
+            avatar.innerHTML = '<i class="fas fa-robot text-purple-300"></i>';
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble loading-bubble';
+            bubble.innerHTML = '<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(bubble);
+            chatMessages.appendChild(wrapper);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         } else {
-            // Remove last loading if exists
-            const items = chatMessages.querySelectorAll('.msg.bot .bubble');
-            const last = items[items.length - 1];
-            if (last && last.textContent === 'Pensando...') {
-                last.parentElement.remove();
+            const loadingMsg = chatMessages.querySelector('.loading-msg');
+            if (loadingMsg) {
+                loadingMsg.remove();
             }
         }
     }
@@ -1777,9 +1768,6 @@ async function invest(amount) {
 		// Stats
 		const stats = Array.from(document.querySelectorAll('[class*="text-4xl"]')).map(el => getTextSafe(el)).filter(Boolean);
 		if (stats.length) ctx.push(`Estadísticas visibles: ${stats.join(', ')}`);
-		// Estado de suscripción (si hay UI)
-		const subState = getTextSafe(document.getElementById('dropdownSubscriptionStatus')) || (typeof isSubscribed !== 'undefined' ? (isSubscribed ? 'Activa' : 'Inactiva') : 'Desconocido');
-		ctx.push(`Suscripción: ${subState}`);
 		// Limitar tamaño para no saturar el prompt
 		let text = ctx.join('\n');
 		if (text.length > 1200) text = text.slice(0, 1200) + '…';
@@ -1828,10 +1816,22 @@ async function invest(amount) {
     toggleBtn.addEventListener('click', () => {
         chatWindow.classList.toggle('hidden');
         if (!chatWindow.classList.contains('hidden') && chatMessages.children.length === 0) {
-            appendMessage('bot', `¡Hola! Soy tu asistente de ${detectedBrand}. ¿En qué te ayudo?`);
+            appendMessage('bot', `¡Hola! Soy Luna, tu asistente IA de ${detectedBrand}. ¿En qué puedo ayudarte hoy? 🌙✨`);
         }
         chatInput.focus();
     });
+
+    // Botón de NAV para abrir Luna
+    const lunaNavBtn = document.getElementById('lunaNavBtn');
+    if (lunaNavBtn) {
+        lunaNavBtn.addEventListener('click', () => {
+            chatWindow.classList.toggle('hidden');
+            if (!chatWindow.classList.contains('hidden') && chatMessages.children.length === 0) {
+                appendMessage('bot', `¡Hola! Soy Luna, tu asistente IA de ${detectedBrand}. ¿En qué puedo ayudarte hoy? 🌙✨`);
+            }
+            chatInput.focus();
+        });
+    }
 
     if (chatClose) {
         chatClose.addEventListener('click', () => chatWindow.classList.add('hidden'));

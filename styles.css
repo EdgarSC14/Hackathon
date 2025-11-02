@@ -260,52 +260,209 @@ button:hover::after {
     transform: translateX(100%);
 } 
 
-/* Asistente IA */
+/* Asistente IA - Estilo Moderno */
 #chatWindow {
-    backdrop-filter: blur(6px);
+    animation: chatSlideIn 0.3s ease-out;
+}
+
+@keyframes chatSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.morpho-chat-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.morpho-chat-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.morpho-chat-scroll::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 3px;
+}
+
+.morpho-chat-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.5);
 }
 
 #chatMessages .msg {
     display: flex;
     align-items: flex-start;
-    gap: 8px;
+    gap: 10px;
+    animation: messageFadeIn 0.3s ease-out;
+}
+
+@keyframes messageFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 #chatMessages .msg .bubble {
     max-width: 80%;
-    padding: 10px 12px;
-    border-radius: 12px;
+    padding: 12px 16px;
+    border-radius: 16px;
     font-size: 0.95rem;
-    line-height: 1.3rem;
+    line-height: 1.4rem;
     white-space: pre-wrap;
     word-break: break-word;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 #chatMessages .msg.user .bubble {
-    background: rgba(139, 92, 246, 0.2);
-    border: 1px solid rgba(139, 92, 246, 0.35);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    backdrop-filter: blur(10px);
 }
 
 #chatMessages .msg.bot .bubble {
-    background: rgba(31, 41, 55, 0.8);
-    border: 1px solid rgba(139, 92, 246, 0.2);
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.9), rgba(17, 24, 39, 0.9));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    backdrop-filter: blur(10px);
 }
 
 #chatMessages .avatar {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 9999px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 #chatMessages .avatar.user {
-    background: rgba(139, 92, 246, 0.25);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.3));
+    border: 2px solid rgba(139, 92, 246, 0.5);
 }
 
 #chatMessages .avatar.bot {
-    background: rgba(55, 65, 81, 0.9);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(67, 56, 202, 0.4));
+    border: 2px solid rgba(139, 92, 246, 0.6);
+    animation: botPulse 2s ease-in-out infinite;
+}
+
+@keyframes botPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(139, 92, 246, 0);
+    }
+}
+
+.morpho-chat-toggle {
+    animation: floatChat 3s ease-in-out infinite;
+}
+
+@keyframes floatChat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes spinSlow {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spinSlow 8s linear infinite;
+}
+
+/* Botón Luna en NAV */
+.morpho-luna-btn {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.15)) !important;
+    border: 1px solid rgba(139, 92, 246, 0.3) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.morpho-luna-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.morpho-luna-btn:hover::before {
+    left: 100%;
+}
+
+.morpho-luna-btn i {
+    color: #a855f7;
+    animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+.morpho-luna-btn:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(236, 72, 153, 0.25)) !important;
+    border-color: rgba(139, 92, 246, 0.5) !important;
+}
+
+.loading-bubble .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(139, 92, 246, 0.6);
+    margin: 0 2px;
+    animation: loadingDots 1.4s ease-in-out infinite;
+}
+
+.loading-bubble .dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-bubble .dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes loadingDots {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.5;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
 }
 
 /* ============================================
@@ -1010,10 +1167,11 @@ nav.morpho-nav .nav-actions {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px) scale(0.95);
-    transition: all 0.3s cubic-bezier(0.36, 0.2, 0.07, 1);
+    transition: opacity 0.3s cubic-bezier(0.36, 0.2, 0.07, 1), visibility 0.3s cubic-bezier(0.36, 0.2, 0.07, 1), transform 0.3s cubic-bezier(0.36, 0.2, 0.07, 1);
 }
 
 #walletDropdown.morpho-dropdown:not(.hidden) {
+    display: block;
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
@@ -1706,13 +1864,13 @@ section {
 .hero-title-section {
     position: relative;
     width: 100%;
-    padding: calc(var(--spacing-XXL) * 2) 0 0 0;
+    padding: calc(var(--spacing-XXL) * 2) 0 calc(var(--spacing-XXL) * 3) 0;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    z-index: 1;
-    min-height: 50vh;
+    z-index: 10;
+    min-height: 40vh;
 }
 
 .hero-content {
@@ -1724,7 +1882,7 @@ section {
 .hero-title {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-weight: 300;
-    font-size: clamp(48px, 8vw, 96px);
+    font-size: clamp(32px, 5vw, 64px);
     line-height: 1.1;
     letter-spacing: -0.04em;
     margin-bottom: var(--spacing-L);
@@ -1734,7 +1892,7 @@ section {
 
 @media (max-width: 767px) {
     .hero-title {
-        font-size: clamp(36px, 10vw, 48px);
+        font-size: clamp(28px, 8vw, 36px);
         margin-bottom: var(--spacing-M);
     }
 }
@@ -1742,18 +1900,20 @@ section {
 .hero-description {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-weight: 400;
-    font-size: clamp(18px, 2.5vw, 24px);
+    font-size: clamp(14px, 2vw, 18px);
     line-height: 1.6;
     color: var(--color-secondary);
     max-width: 800px;
     margin: 0 auto 0 auto;
-    padding-bottom: 0;
+    padding-bottom: var(--spacing-XXL);
     font-weight: 300;
+    position: relative;
+    z-index: 10;
 }
 
 @media (max-width: 767px) {
     .hero-description {
-        font-size: 16px;
+        font-size: 14px;
         line-height: 1.5;
     }
 }
@@ -1762,13 +1922,13 @@ section {
 .hero-circle-section {
     position: relative;
     width: 100%;
-    min-height: 70vh;
+    min-height: 60vh;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: calc(var(--spacing-XXL) * 2);
-    padding: 0 0 var(--spacing-XXL) 0;
-    margin-top: -120px;
+    padding: var(--spacing-XXL) 0;
+    margin-top: 0;
 }
 
 @media (max-width: 767px) {
@@ -1853,4 +2013,20 @@ section {
     animation: scrollIndicator 2s ease-in-out infinite;
     z-index: 10;
     pointer-events: none;
+}
+
+/* Estilos específicos para el input de Luna */
+#chatInput {
+    background-color: rgba(17, 24, 39, 0.6) !important;
+    backdrop-filter: blur(10px);
+    color: #ffffff !important;
+}
+
+#chatInput::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+#chatInput:focus {
+    background-color: rgba(31, 41, 55, 0.7) !important;
+    color: #ffffff !important;
 }

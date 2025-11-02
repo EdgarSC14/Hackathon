@@ -1,1381 +1,474 @@
-// Sistema de partículas estilo Morpho con círculo interactivo
+// Sistema de partículas estilo Morpho con esfera 3D interactiva usando Three.js
 class MorphoParticles {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         if (!this.canvas) return;
         
-        this.ctx = this.canvas.getContext('2d');
-        this.particles = [];
-        this.mouse = { x: 0, y: 0 };
-        this.circleRadius = 180; // Radio más grande para parecerse más a Morpho
-        this.circleCenter = { x: 0, y: 0 };
+        this.baseRadius = 150;
+        this.maxRadius = 600;
+        this.currentRadius = 150;
+        this.particleCount = 2000;
         this.scrollProgress = 0;
-        this.isScrolling = false;
-        this.sponsorsVisible = false;
-        this.circleOpacity = 1; // Opacidad del círculo para animación de desaparición
-        this.circleBaseY = 0; // Posición Y base del círculo (sin scroll)
-        this.explosionActive = false; // Estado de explosión
-        this.explosionProgress = 0; // Progreso de la explosión (0-1)
-        this.explosionTriggered = false; // Si ya se activó la explosión
+        this.scrollAnimationDuration = 0.15;
+        this.sponsorVisibilityStart = 0.3;
+        this.sponsorVisibilityEnd = 0.7;
+        this.sponsorFadeComplete = 0.9;
         
-        // Partículas que forman el círculo
-        this.circleParticles = [];
-        this.circleParticleCount = 100; // Número de partículas para formar el círculo (más partículas = círculo más denso)
-        
-        // Animaciones GSAP
-        this.circleAnimations = null;
-        
-        // Configuración
-        this.particleCount = 400; // Más partículas para llenar el círculo
-        this.innerParticleCount = 200; // Partículas específicas para el interior del círculo
-        this.collectedParticles = [];
-        this.scatteredParticles = [];
-        this.mouseNearCircle = false;
-        this.innerParticles = []; // Partículas dentro del círculo
-        this.isHomeSection = true; // Control de si estamos en la sección home
+        this.scene = this.camera = this.renderer = this.particles = null;
+        this.logoSprites = [];
+        this.centerLogo = null;
+        this.backgroundParticles = null;
+        this.rotationSpeed = 0.0005;
+        this.currentRotationY = 0;
+        this.lastScrollTime = 0;
+        this.throttleDelay = 16; // ~60fps
+        this.mouseX = 0;
+        this.mouseY = 0;
         
         this.init();
     }
     
     init() {
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
-        window.addEventListener('mousemove', (e) => this.onMouseMove(e));
+        // Configurar Three.js
+        this.setupThreeJS();
+        
+        // Cargar logos de sponsors
+        this.loadSponsorLogos();
+        
+        // Event listeners
+        window.addEventListener('resize', () => this.onWindowResize());
         window.addEventListener('scroll', () => this.onScroll());
+        window.addEventListener('mousemove', (e) => this.onMouseMove(e));
         
-        // Observar cambios en las secciones para mostrar/ocultar el círculo
-        this.observeSectionChanges();
-        
-        // Cargar logo si existe
-        this.logoImage = null;
-        this.loadLogo();
-        
-        // Crear partículas del círculo (borde)
-        this.createCircleParticles();
-        
-        // Crear partículas dentro del círculo
-        this.createInnerParticles();
-        
-        // Crear partículas normales (exteriores)
-        for (let i = 0; i < this.particleCount; i++) {
-            this.particles.push(this.createParticle());
-        }
-        
-        // Inicializar animaciones GSAP para el círculo
-        this.initCircleAnimations();
-        
+        // Iniciar animación
         this.animate();
-        
-        // Actualizar posición del círculo periódicamente para seguir la sección hero
-        setInterval(() => this.updateCirclePosition(), 100);
     }
     
-    createCircleParticles() {
-        // Crear partículas que formarán el borde del círculo
-        for (let i = 0; i < this.circleParticleCount; i++) {
-            const angle = (i / this.circleParticleCount) * Math.PI * 2;
-            const particle = {
-                angle: angle,
-                baseAngle: angle, // Ángulo base
-                radius: this.circleRadius,
-                baseRadius: this.circleRadius,
-                x: 0,
-                y: 0,
-                targetX: 0,
-                targetY: 0,
-                size: 1.5 + Math.random() * 1.5, // Tamaño más pequeño y variado entre 1.5-3 para estilo más sutil
-                opacity: 0.8 + Math.random() * 0.2, // Opacidad más alta para mejor visibilidad
-                hue: 250 + Math.sin(i / 15) * 30 + (i % 20) * 2, // Variación de color más amplia (púrpura/azul)
-                pulsePhase: Math.random() * Math.PI * 2, // Fase aleatoria para pulso
-                originalOpacity: 0.8 + Math.random() * 0.2, // Coincide con opacity inicial
-                originalSize: 1.5 + Math.random() * 1.5, // Coincide con size inicial
-                exploded: false,
-                velocityX: 0,
-                velocityY: 0,
-                glowIntensity: 0.5 + Math.random() * 0.5 // Intensidad de resplandor variable
-            };
-            
-            this.circleParticles.push(particle);
-        }
+    setupThreeJS() {
+        // Escena
+        this.scene = new THREE.Scene();
         
-        // Actualizar posiciones iniciales
-        this.updateCircleParticlesPosition();
-    }
-    
-    createInnerParticles() {
-        // Crear partículas que llenan el interior del círculo
-        for (let i = 0; i < this.innerParticleCount; i++) {
-            const particle = {
-                // Posición aleatoria dentro del círculo
-                angle: Math.random() * Math.PI * 2,
-                baseAngle: 0,
-                radius: Math.random() * this.circleRadius * 0.9, // Dentro del círculo
-                baseRadius: Math.random() * this.circleRadius * 0.9,
-                x: 0,
-                y: 0,
-                targetX: 0,
-                targetY: 0,
-                size: 1.5 + Math.random() * 2, // Partículas más pequeñas para el interior
-                opacity: 0.4 + Math.random() * 0.4,
-                hue: 240 + Math.sin(i / 10) * 30 + Math.random() * 20,
-                pulsePhase: Math.random() * Math.PI * 2,
-                originalOpacity: 0.4 + Math.random() * 0.4,
-                originalSize: 1.5 + Math.random() * 2,
-                exploded: false,
-                velocityX: 0,
-                velocityY: 0,
-                glowIntensity: 0.3 + Math.random() * 0.4,
-                inCircle: true, // Marcar como dentro del círculo
-                inner: true // Marcar como partícula interior
-            };
-            
-            this.innerParticles.push(particle);
-        }
+        // Cámara
+        const aspect = window.innerWidth / window.innerHeight;
+        this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 10000);
+        this.camera.position.z = 1000;
+        this.camera.position.y = 180;
         
-        // Actualizar posiciones iniciales
-        this.updateInnerParticlesPosition();
-    }
-    
-    updateInnerParticlesPosition() {
-        this.innerParticles.forEach(p => {
-            if (!p.exploded) {
-                // Movimiento orgánico dentro del círculo
-                const time = Date.now() * 0.001;
-                const radiusVariation = Math.sin(p.pulsePhase + time) * 10;
-                const angleVariation = Math.cos(p.pulsePhase * 0.7 + time * 0.5) * 0.1;
-                const currentRadius = Math.max(10, Math.min(this.circleRadius * 0.9, p.baseRadius + radiusVariation));
-                const currentAngle = p.angle + angleVariation;
-                
-                p.targetX = this.circleCenter.x + Math.cos(currentAngle) * currentRadius;
-                p.targetY = this.circleCenter.y + Math.sin(currentAngle) * currentRadius;
-                
-                // Interpolación suave
-                p.x += (p.targetX - p.x) * 0.12;
-                p.y += (p.targetY - p.y) * 0.12;
-                
-                // Mantener dentro del círculo
-                const distFromCenter = Math.sqrt(
-                    Math.pow(p.x - this.circleCenter.x, 2) + 
-                    Math.pow(p.y - this.circleCenter.y, 2)
-                );
-                
-                if (distFromCenter > this.circleRadius * 0.95) {
-                    const angle = Math.atan2(p.y - this.circleCenter.y, p.x - this.circleCenter.x);
-                    p.x = this.circleCenter.x + Math.cos(angle) * this.circleRadius * 0.9;
-                    p.y = this.circleCenter.y + Math.sin(angle) * this.circleRadius * 0.9;
-                }
-            }
+        // Renderer
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
+            alpha: true
         });
-    }
-    
-    updateCircleParticlesPosition() {
-        this.circleParticles.forEach(p => {
-            if (!p.exploded) {
-                // Calcular posición en el círculo con variaciones sutiles para efecto orgánico
-                const time = Date.now() * 0.0008; // Velocidad de variación más lenta
-                const variation = Math.sin(p.pulsePhase + time) * 2; // Variación más sutil
-                const radialVariation = Math.cos(p.pulsePhase * 1.5 + time * 0.7) * 1.5; // Variación radial adicional
-                const currentRadius = p.baseRadius + variation + radialVariation;
-                
-                p.targetX = this.circleCenter.x + Math.cos(p.angle) * currentRadius;
-                p.targetY = this.circleCenter.y + Math.sin(p.angle) * currentRadius;
-                
-                // Interpolación más suave hacia la posición objetivo
-                const lerpFactor = 0.15; // Interpolación más rápida pero suave
-                p.x += (p.targetX - p.x) * lerpFactor;
-                p.y += (p.targetY - p.y) * lerpFactor;
-            }
-        });
-    }
-    
-    initCircleAnimations() {
-        if (typeof gsap === 'undefined') return;
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
         
-        // Animación continua de rotación suave del círculo (más lenta y suave)
-        let rotationProgress = { value: 0 };
-        this.circleAnimations = gsap.to(rotationProgress, {
-            value: 360,
-            duration: 40, // 40 segundos para una rotación completa (más lento)
-            repeat: -1,
-            ease: "none",
-            onUpdate: () => {
-                this.circleParticles.forEach((p) => {
-                    // Rotación lenta y continua del círculo
-                    const rotationRadians = (rotationProgress.value * Math.PI) / 180;
-                    p.angle = p.baseAngle + rotationRadians;
-                });
-            }
+        // Crear partículas de fondo primero
+        this.createBackgroundParticles();
+        
+        // Crear sistema de partículas 3D
+        this.createParticleSystem();
+    }
+    
+    createBackgroundParticles() {
+        const bgParticleMaterial = new THREE.PointsMaterial({
+            color: 0x8b5cf6,
+            size: 3,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
         });
         
-        // Animación de pulso para cada partícula del círculo (más sutil)
-        this.circleParticles.forEach((p, index) => {
-            // Guardar valores originales
-            const originalOpacity = p.originalOpacity;
-            const originalSize = p.originalSize;
+        const geometry = new THREE.BufferGeometry();
+        const positions = [];
+        const count = 1500;
+        
+        const velocities = [];
+        
+        for (let i = 0; i < count; i++) {
+            positions.push(
+                (Math.random() - 0.5) * 2000,
+                (Math.random() - 0.5) * 2000,
+                (Math.random() - 0.5) * 1000
+            );
             
-            // Animación de opacidad (pulso más sutil)
-            gsap.to(p, {
-                opacity: originalOpacity * 0.5, // Menos variación de opacidad
-                duration: 2 + Math.random() * 1,
-                repeat: -1,
-                yoyo: true,
-                ease: "sine.inOut",
-                delay: index * 0.015 // Delay más corto para transiciones más suaves
-            });
-            
-            // Animación de tamaño (pulso más sutil)
-            gsap.to(p, {
-                size: originalSize * 1.5, // Menos variación de tamaño
-                duration: 2.5 + Math.random() * 1.5,
-                repeat: -1,
-                yoyo: true,
-                ease: "sine.inOut",
-                delay: index * 0.012
-            });
-            
-            // Animación de intensidad de resplandor (nuevo)
-            gsap.to(p, {
-                glowIntensity: p.glowIntensity * 1.3,
-                duration: 1.8 + Math.random() * 0.8,
-                repeat: -1,
-                yoyo: true,
-                ease: "sine.inOut",
-                delay: index * 0.01
-            });
+            velocities.push(
+                (Math.random() - 0.5) * 0.5,
+                (Math.random() - 0.5) * 0.5,
+                (Math.random() - 0.5) * 0.3
+            );
+        }
+        
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        this.backgroundParticles = new THREE.Points(geometry, bgParticleMaterial);
+        this.backgroundParticles.userData = {velocities: velocities};
+        this.scene.add(this.backgroundParticles);
+    }
+    
+    createParticleSystem() {
+        const particleMaterial = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 2,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            vertexColors: false
         });
-    }
-    
-    updateCirclePosition() {
-        const heroSection = document.querySelector('.hero-circle-section');
-        if (heroSection) {
-            const heroRect = heroSection.getBoundingClientRect();
+        
+        const geometry = new THREE.BufferGeometry();
+        const positions = [];
+        const radius = this.baseRadius;
+        const particleCount = this.particleCount;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.random() * Math.PI;
+            const r = radius + (Math.random() - 0.5) * 50;
             
-            // Calcular posición base absoluta (posición inicial del círculo en el documento)
-            if (this.circleBaseY === 0) {
-                // Calcular la posición inicial cuando la página se carga
-                const initialScroll = window.scrollY;
-                this.circleBaseY = heroRect.top + heroRect.height / 2 + initialScroll;
-            }
-            
-            // El círculo se mueve hacia arriba con el scroll
-            this.circleCenter.x = heroRect.left + heroRect.width / 2;
-            
-            // Calcular nueva posición Y (disminuye cuando sube el scroll)
-            const scrollY = window.scrollY;
-            const newY = this.circleBaseY - scrollY;
-            this.circleCenter.y = newY;
-            
-            // Verificar si el círculo está fuera de la pantalla visible
-            const viewportTop = 0;
-            const viewportBottom = window.innerHeight;
-            const circleTop = newY - this.circleRadius;
-            const circleBottom = newY + this.circleRadius;
-            
-            // Calcular distancia desde el viewport para un desvanecido más suave
-            let distanceFromViewport = 0;
-            
-            if (circleBottom < viewportTop) {
-                // El círculo está arriba del viewport
-                distanceFromViewport = viewportTop - circleBottom;
-            } else if (circleTop > viewportBottom) {
-                // El círculo está abajo del viewport
-                distanceFromViewport = circleTop - viewportBottom;
-            }
-            
-            // Crear zona de explosión - cuando el círculo está saliendo del viewport
-            // Reducir la distancia de activación para que la explosión comience antes
-            const explosionTriggerDistance = window.innerHeight * 0.15; // Activar explosión cuando está a 15% del viewport
-            
-            // Verificar que el círculo esté realmente saliendo (no entrando)
-            const isExiting = circleBottom < viewportTop || circleTop > viewportBottom;
-            
-            // Detectar también cuando el círculo está parcialmente fuera
-            const isPartiallyOut = (circleBottom < viewportTop && circleTop < viewportTop) || 
-                                  (circleTop > viewportBottom && circleBottom > viewportBottom);
-            
-            if ((distanceFromViewport > explosionTriggerDistance || isPartiallyOut) && isExiting && !this.explosionTriggered) {
-                // Activar explosión solo una vez
-                this.explosionTriggered = true;
-                this.explosionActive = true;
-                this.explosionProgress = 0;
-                this.triggerExplosion();
-            }
-            
-            // Si hay una explosión activa, actualizar progreso
-            if (this.explosionActive) {
-                // Hacer la explosión más lenta para que sea visible
-                this.explosionProgress += 0.015; // Reducido de 0.02 para hacerlo más lento
-                this.explosionProgress = Math.min(1, this.explosionProgress);
-                
-                // El círculo desaparece gradualmente durante la explosión
-                // Mantener algo de opacidad al inicio para ver la explosión
-                if (this.explosionProgress < 0.3) {
-                    // En los primeros 30% de la explosión, mantener más opacidad para ver las partículas explotar
-                    this.circleOpacity = 1 - (this.explosionProgress / 0.3) * 0.5;
-                } else {
-                    // Después, desvanecer más rápido
-                    const fadeProgress = (this.explosionProgress - 0.3) / 0.7;
-                    this.circleOpacity = 0.5 - (fadeProgress * 0.5);
-                }
-                
-                // Si la explosión terminó, desactivar
-                if (this.explosionProgress >= 1) {
-                    this.explosionActive = false;
-                    this.circleOpacity = 0;
-                }
-            } else if (distanceFromViewport <= explosionTriggerDistance) {
-                // Resetear si el círculo vuelve a entrar en el viewport
-                this.explosionTriggered = false;
-                if (this.circleOpacity < 1) {
-                    // Animar aparición cuando vuelve a estar visible (muy suave)
-                    this.circleOpacity += (1 - this.circleOpacity) * 0.03;
-                }
-            }
-            
-            // Asegurar que la opacidad esté en el rango correcto
-            this.circleOpacity = Math.max(0, Math.min(1, this.circleOpacity));
-        } else {
-            // Fallback si no existe la sección
-            this.circleCenter.x = this.canvas.width / 2;
-            this.circleCenter.y = Math.min(this.canvas.height * 0.35, 400);
+            positions.push(
+                r * Math.sin(phi) * Math.cos(theta),
+                r * Math.sin(phi) * Math.sin(theta),
+                r * Math.cos(phi)
+            );
         }
+        
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        
+        this.particles = new THREE.Points(geometry, particleMaterial);
+        this.scene.add(this.particles);
+        this.originalPositions = new Float32Array(positions);
+        
+        // Crear logo en el centro
+        this.createCenterLogo();
     }
     
-    loadLogo() {
-        // Intentar cargar un logo desde assets, si no existe, crearemos uno minimalista
-        const logoImg = new Image();
+    createCenterLogo() {
+        const size = 256;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
         
-        // Intentar diferentes formatos de logo
-        const possibleLogos = [
-            'assets/images/logo.png',
-            'assets/images/logo.svg',
-            'assets/images/logo.jpg',
-            'assets/images/logo.jpeg'
-        ];
-        
-        let logoIndex = 0;
-        
-        logoImg.onload = () => {
-            this.logoImage = logoImg;
-        };
-        
-        logoImg.onerror = () => {
-            logoIndex++;
-            if (logoIndex < possibleLogos.length) {
-                // Intentar siguiente formato
-                logoImg.src = possibleLogos[logoIndex];
-            } else {
-                // Si ninguna imagen cargó, crear logo minimalista
-                this.createMinimalistLogo();
-            }
-        };
-        
-        // Iniciar carga del primer logo
-        if (possibleLogos.length > 0) {
-            logoImg.src = possibleLogos[0];
-        } else {
-            this.createMinimalistLogo();
-        }
-    }
-    
-    createMinimalistLogo() {
-        // Crear un logo minimalista usando canvas
-        const logoCanvas = document.createElement('canvas');
-        const size = 200;
-        logoCanvas.width = size;
-        logoCanvas.height = size;
-        const ctx = logoCanvas.getContext('2d');
-        
-        // Fondo transparente
         ctx.clearRect(0, 0, size, size);
         
-        // Logo minimalista: círculo con forma abstracta
-        ctx.save();
+        const center = size / 2;
         
-        // Círculo exterior sutil
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(size / 2, size / 2, size * 0.35, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        // Forma central abstracta (ondas o formas geométricas)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.beginPath();
-        
-        // Crear una forma abstracta minimalista (ondas concéntricas)
-        const centerX = size / 2;
-        const centerY = size / 2;
-        const radius = size * 0.25;
-        
-        // Forma tipo onda o círculo con gradiente
-        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-        gradient.addColorStop(0, 'rgba(139, 92, 246, 0.9)');
-        gradient.addColorStop(0.5, 'rgba(139, 92, 246, 0.6)');
+        // Gradiente radial para fondo del logo
+        const gradient = ctx.createRadialGradient(center, center, 0, center, center, size * 0.4);
+        gradient.addColorStop(0, 'rgba(139, 92, 246, 0.8)');
         gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
         
+        // Círculo principal con gradiente
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.arc(center, center, size * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Borde exterior blanco
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(center, center, size * 0.4, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Forma interna: diamante abstracto
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.beginPath();
+        ctx.moveTo(center, center - size * 0.25);
+        ctx.lineTo(center + size * 0.18, center);
+        ctx.lineTo(center, center + size * 0.25);
+        ctx.lineTo(center - size * 0.18, center);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Punto brillante en el centro
+        const innerGradient = ctx.createRadialGradient(center, center, 0, center, center, size * 0.15);
+        innerGradient.addColorStop(0, 'rgba(139, 92, 246, 1)');
+        innerGradient.addColorStop(1, 'rgba(139, 92, 246, 0.3)');
+        ctx.fillStyle = innerGradient;
+        ctx.beginPath();
+        ctx.arc(center, center, size * 0.15, 0, Math.PI * 2);
         ctx.fill();
         
         // Núcleo brillante
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 1)';
         ctx.beginPath();
-        ctx.arc(centerX, centerY, radius * 0.4, 0, Math.PI * 2);
+        ctx.arc(center, center, size * 0.08, 0, Math.PI * 2);
         ctx.fill();
         
-        // Líneas decorativas minimalistas
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 1.5;
+        // Líneas decorativas sutiles
+        ctx.strokeStyle = 'rgba(139, 92, 246, 0.4)';
+        ctx.lineWidth = 2;
         
-        // Líneas radiales sutiles
-        for (let i = 0; i < 8; i++) {
-            const angle = (i / 8) * Math.PI * 2;
+        for (let i = 0; i < 4; i++) {
+            const angle = (Math.PI / 2) * i;
             ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
+            ctx.moveTo(
+                center + Math.cos(angle) * size * 0.25,
+                center + Math.sin(angle) * size * 0.25
+            );
             ctx.lineTo(
-                centerX + Math.cos(angle) * radius * 0.8,
-                centerY + Math.sin(angle) * radius * 0.8
+                center + Math.cos(angle) * size * 0.38,
+                center + Math.sin(angle) * size * 0.38
             );
             ctx.stroke();
         }
         
-        ctx.restore();
-        
-        // Convertir canvas a imagen
-        const img = new Image();
-        img.onload = () => {
-            this.logoImage = img;
-        };
-        img.src = logoCanvas.toDataURL('image/png');
-    }
-    
-    resize() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-        
-        // Calcular posición del círculo basándose en la sección hero
-        this.updateCirclePosition();
-        
-        // Recalcular posiciones de partículas
-        this.particles.forEach(p => {
-            if (!p.initialized) {
-                this.setParticlePosition(p);
-                p.initialized = true;
-            }
+        const texture = new THREE.CanvasTexture(canvas);
+        const logoMaterial = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            opacity: 1.0,
+            blending: THREE.NormalBlending
         });
+        
+        const logo = new THREE.Sprite(logoMaterial);
+        logo.scale.set(60, 60, 1);
+        logo.position.set(0, 0, 0);
+        
+        logo.userData = {};
+        
+        this.centerLogo = logo;
+        this.scene.add(logo);
     }
     
-    createParticle() {
-        const particle = {
-            x: 0,
-            y: 0,
-            initialX: 0,
-            initialY: 0,
-            targetX: 0,
-            targetY: 0,
-            radius: Math.random() * 2 + 1,
-            speed: Math.random() * 0.5 + 0.2,
-            angle: Math.random() * Math.PI * 2,
-            distance: Math.random() * 300 + 100,
-            opacity: Math.random() * 0.5 + 0.2,
-            hue: Math.random() * 60 + 220, // Púrpura/azul
-            initialized: false,
-            inCircle: false, // Cambiado a false para esparcir por toda la pantalla
-            scattered: true, // Marcadas como dispersas desde el inicio
-            exploded: false,
-            velocityX: 0,
-            velocityY: 0,
-            explosionSpeed: 0,
-            explosionFade: 1,
-            scatterSpeed: Math.random() * 0.15 + 0.05, // Velocidad inicial reducida para partículas dispersas
-            floatOffset: Math.random() * Math.PI * 2, // Offset para movimiento flotante
-            floatSpeed: Math.random() * 0.008 + 0.005, // Velocidad del movimiento flotante más lenta
-            floatAmplitude: Math.random() * 1.5 + 0.5 // Amplitud del movimiento flotante reducida
-        };
+    loadSponsorLogos() {
+        const sponsorUrls = [
+            'https://via.placeholder.com/100x100/8b5cf6/ffffff?text=1',
+            'https://via.placeholder.com/100x100/6366f1/ffffff?text=2',
+            'https://via.placeholder.com/100x100/a855f7/ffffff?text=3',
+            'https://via.placeholder.com/100x100/ec4899/ffffff?text=4'
+        ];
         
-        this.setParticlePosition(particle);
-        return particle;
-    }
-    
-    setParticlePosition(particle) {
-        if (particle.inCircle && !particle.scattered) {
-            // Posición alrededor del círculo
-            particle.initialX = this.circleCenter.x + Math.cos(particle.angle) * particle.distance;
-            particle.initialY = this.circleCenter.y + Math.sin(particle.angle) * particle.distance;
-            particle.x = particle.initialX;
-            particle.y = particle.initialY;
-        } else {
-            // Posición dispersa por toda la pantalla
-            particle.x = Math.random() * this.canvas.width;
-            particle.y = Math.random() * this.canvas.height;
-            particle.targetX = particle.x;
-            particle.targetY = particle.y;
-        }
-    }
-    
-    onMouseMove(e) {
-        this.mouse.x = e.clientX;
-        this.mouse.y = e.clientY;
+        const loader = new THREE.TextureLoader();
+        const total = sponsorUrls.length;
         
-        if (this.sponsorsVisible) return;
-        
-        // Verificar si el mouse está cerca del círculo
-        const distanceToCircle = Math.sqrt(
-            Math.pow(this.mouse.x - this.circleCenter.x, 2) + 
-            Math.pow(this.mouse.y - this.circleCenter.y, 2)
-        );
-        
-        const interactionRadius = this.circleRadius * 3;
-        this.mouseNearCircle = distanceToCircle < interactionRadius;
-        
-        // Interacción con partículas de fondo (siempre activa)
-        const backgroundInteractionRadius = 120; // Radio de interacción para partículas de fondo
-        
-        this.particles.forEach(p => {
-            if (!p.inCircle && p.scattered) {
-                // Partículas de fondo: interacción con el mouse
-                const dx = p.x - this.mouse.x;
-                const dy = p.y - this.mouse.y;
-                const distToMouse = Math.sqrt(dx * dx + dy * dy);
+        sponsorUrls.forEach((url, index) => {
+            loader.load(url, texture => {
+                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+                    map: texture,
+                    transparent: true,
+                    opacity: 0,
+                    blending: THREE.AdditiveBlending
+                }));
                 
-                if (distToMouse < backgroundInteractionRadius) {
-                    // Repeler partículas de fondo del mouse
-                    const influence = 1 - (distToMouse / backgroundInteractionRadius);
-                    const force = (1 / (distToMouse + 1)) * influence * 15; // Fuerza más suave
-                    p.targetX += (dx / distToMouse) * force;
-                    p.targetY += (dy / distToMouse) * force;
-                }
-            }
+                const angle = (index / total) * Math.PI * 2;
+                const distance = this.baseRadius * 1.8;
+                sprite.position.set(
+                    Math.cos(angle) * distance,
+                    Math.sin(angle) * distance,
+                    0
+                );
+                sprite.scale.set(60, 60, 1);
+                sprite.userData = {originalScale: 60, angle, distance};
+                
+                this.scene.add(sprite);
+                this.logoSprites.push(sprite);
+            });
         });
-        
-        if (this.mouseNearCircle) {
-            // Calcular fuerza de atracción basada en la distancia del mouse
-            const influence = 1 - (distanceToCircle / interactionRadius);
-            
-            // Verificar si el mouse está dentro del círculo
-            const isMouseInsideCircle = distanceToCircle < this.circleRadius;
-            
-            // Atraer/repeler partículas normales según la posición del mouse
-            this.particles.forEach(p => {
-                if (p.inCircle && !p.scattered) {
-                    const dx = p.x - this.mouse.x;
-                    const dy = p.y - this.mouse.y;
-                    const distToMouse = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distToMouse < 200) {
-                        // Repeler partículas del mouse
-                        const force = (1 / (distToMouse + 1)) * influence * 30;
-                        p.targetX += (dx / distToMouse) * force;
-                        p.targetY += (dy / distToMouse) * force;
-                    }
-                    
-                    // Atracción hacia el círculo SOLO para partículas que están en el círculo
-                    // Las partículas de fondo (inCircle: false, scattered: true) no deben ser atraídas
-                    if (p.inCircle && !p.scattered) {
-                        const dxToCenter = this.circleCenter.x - p.x;
-                        const dyToCenter = this.circleCenter.y - p.y;
-                        const distToCenter = Math.sqrt(dxToCenter * dxToCenter + dyToCenter * dyToCenter);
-                        
-                        if (distToCenter > 0) {
-                            const centerForce = (1 / distToCenter) * 20;
-                            p.targetX += (dxToCenter / distToCenter) * centerForce * 0.1;
-                            p.targetY += (dyToCenter / distToCenter) * centerForce * 0.1;
-                        }
-                    }
-                }
-            });
-            
-            // Interacción con partículas del borde del círculo
-            if (isMouseInsideCircle) {
-                this.circleParticles.forEach(p => {
-                    if (!p.exploded) {
-                        const dx = p.x - this.mouse.x;
-                        const dy = p.y - this.mouse.y;
-                        const distToMouse = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distToMouse < 150) {
-                            const force = (1 / (distToMouse + 1)) * influence * 25;
-                            p.targetX += (dx / distToMouse) * force;
-                            p.targetY += (dy / distToMouse) * force;
-                        }
-                    }
-                });
-            }
-            
-            // Interacción con partículas internas del círculo
-            this.innerParticles.forEach(p => {
-                if (!p.exploded && isMouseInsideCircle) {
-                    const dx = p.x - this.mouse.x;
-                    const dy = p.y - this.mouse.y;
-                    const distToMouse = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distToMouse < 100) {
-                        // Repeler partículas del mouse con más fuerza
-                        const force = (1 / (distToMouse + 1)) * influence * 40;
-                        p.targetX += (dx / distToMouse) * force;
-                        p.targetY += (dy / distToMouse) * force;
-                    } else if (distToMouse < 200) {
-                        // Atracción suave hacia el mouse si está cerca
-                        const force = (1 / (distToMouse + 1)) * influence * 15;
-                        p.targetX -= (dx / distToMouse) * force;
-                        p.targetY -= (dy / distToMouse) * force;
-                    }
-                    
-                    // Asegurar que las partículas vuelvan al círculo
-                    const distFromCenter = Math.sqrt(
-                        Math.pow(p.x - this.circleCenter.x, 2) + 
-                        Math.pow(p.y - this.circleCenter.y, 2)
-                    );
-                    
-                    if (distFromCenter > this.circleRadius * 0.95) {
-                        const dxToCenter = this.circleCenter.x - p.x;
-                        const dyToCenter = this.circleCenter.y - p.y;
-                        const distToCenter = Math.sqrt(dxToCenter * dxToCenter + dyToCenter * dyToCenter);
-                        
-                        if (distToCenter > 0) {
-                            const returnForce = (distFromCenter - this.circleRadius * 0.9) * 0.5;
-                            p.targetX += (dxToCenter / distToCenter) * returnForce;
-                            p.targetY += (dyToCenter / distToCenter) * returnForce;
-                        }
-                    }
-                }
-            });
-        }
+    }
+    
+    onWindowResize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
     
     onScroll() {
-        this.scrollProgress = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
-        this.scrollProgress = Math.min(Math.max(this.scrollProgress, 0), 1);
+        const now = performance.now();
+        if (now - this.lastScrollTime < this.throttleDelay) return;
+        this.lastScrollTime = now;
         
-        // Actualizar posición del círculo al hacer scroll
-        this.updateCirclePosition();
+        const windowHeight = window.innerHeight;
+        const scrollTop = window.scrollY;
+        const maxScroll = document.documentElement.scrollHeight - windowHeight * 2;
         
-        // Activar dispersión después de cierto scroll (sin mostrar sponsors)
-        if (this.scrollProgress > 0.3 && !this.sponsorsVisible) {
-            this.scatterParticles();
-            this.sponsorsVisible = true;
-            // this.showSponsors(); // Deshabilitado
-        } else if (this.scrollProgress <= 0.25 && this.sponsorsVisible) {
-            this.collectParticles();
-            this.sponsorsVisible = false;
-            // this.hideSponsors(); // Deshabilitado
-        }
+        this.scrollProgress = Math.max(0, Math.min(scrollTop / maxScroll, 1));
+        
+        this.updateCircleExpansion();
+        this.updateSponsorVisibility();
     }
     
-    triggerExplosion() {
-        // Efecto de explosión: todas las partículas salen disparadas desde el centro
-        // Asegurar que la explosión esté activa
-        if (!this.explosionActive) {
-            this.explosionActive = true;
-            this.explosionProgress = 0;
-            this.explosionTriggered = true;
-        }
+    updateCircleExpansion() {
+        const targetRadius = this.baseRadius + (this.maxRadius - this.baseRadius) * this.scrollProgress;
+        this.currentRadius = THREE.MathUtils.lerp(this.currentRadius, targetRadius, this.scrollAnimationDuration);
         
-        // Explosión de partículas del círculo (borde)
-        this.circleParticles.forEach(p => {
-            if (!p.exploded) {
-                p.exploded = true;
-                const angle = p.angle + (Math.random() - 0.5) * 0.5; // Ángulo basado en posición + variación
-                const explosionSpeed = Math.random() * 10 + 6;
-                
-                p.velocityX = Math.cos(angle) * explosionSpeed;
-                p.velocityY = Math.sin(angle) * explosionSpeed;
-                
-                // Animación GSAP para la explosión de partículas del círculo
-                if (typeof gsap !== 'undefined') {
-                    gsap.to(p, {
-                        opacity: 0,
-                        duration: 1.5 + Math.random() * 0.5,
-                        ease: "power2.out"
-                    });
-                    
-                    gsap.to(p, {
-                        size: 0,
-                        duration: 1 + Math.random() * 0.5,
-                        ease: "power2.in"
-                    });
-                }
-            }
-        });
-        
-        // Explosión de partículas internas del círculo
-        this.innerParticles.forEach(p => {
-            if (!p.exploded) {
-                p.exploded = true;
-                
-                // Calcular ángulo desde el centro hacia donde está la partícula
-                const angle = Math.atan2(p.y - this.circleCenter.y, p.x - this.circleCenter.x);
-                // Agregar variación aleatoria al ángulo
-                const randomVariation = (Math.random() - 0.5) * 1.2;
-                const finalAngle = angle + randomVariation;
-                
-                // Velocidad basada en la distancia desde el centro
-                const distFromCenter = Math.sqrt(
-                    Math.pow(p.x - this.circleCenter.x, 2) + 
-                    Math.pow(p.y - this.circleCenter.y, 2)
-                );
-                const baseSpeed = 8 + (distFromCenter / this.circleRadius) * 4;
-                const explosionSpeed = baseSpeed + Math.random() * 6;
-                
-                p.velocityX = Math.cos(finalAngle) * explosionSpeed;
-                p.velocityY = Math.sin(finalAngle) * explosionSpeed;
-                
-                // Animación GSAP para la explosión
-                if (typeof gsap !== 'undefined') {
-                    gsap.to(p, {
-                        opacity: 0,
-                        duration: 1.2 + Math.random() * 0.8,
-                        ease: "power2.out"
-                    });
-                    
-                    gsap.to(p, {
-                        size: 0,
-                        duration: 0.8 + Math.random() * 0.4,
-                        ease: "power2.in"
-                    });
-                }
-            }
-        });
-        
-        // Explosión de partículas normales que están cerca del círculo
-        this.particles.forEach(p => {
-            if (p.inCircle && !p.scattered) {
-                const distFromCenter = Math.sqrt(
-                    Math.pow(p.x - this.circleCenter.x, 2) + 
-                    Math.pow(p.y - this.circleCenter.y, 2)
-                );
-                
-                // Solo explotar si está dentro del radio del círculo
-                if (distFromCenter < this.circleRadius * 1.2) {
-                    p.exploded = true;
-                    p.inCircle = false;
-                    p.scattered = true;
-                    
-                    // Calcular ángulo desde el centro hacia la partícula
-                    const angle = Math.atan2(p.y - this.circleCenter.y, p.x - this.circleCenter.x);
-                    const randomVariation = (Math.random() - 0.5) * 0.8;
-                    const finalAngle = angle + randomVariation;
-                    
-                    // Velocidad de explosión
-                    const explosionSpeed = Math.random() * 10 + 6;
-                    const explosionDistance = Math.random() * 800 + 500;
-                    
-                    // Calcular posición objetivo
-                    p.targetX = this.circleCenter.x + Math.cos(finalAngle) * explosionDistance;
-                    p.targetY = this.circleCenter.y + Math.sin(finalAngle) * explosionDistance;
-                    
-                    // Velocidad inicial alta para el efecto de explosión
-                    p.velocityX = Math.cos(finalAngle) * explosionSpeed;
-                    p.velocityY = Math.sin(finalAngle) * explosionSpeed;
-                    p.explosionSpeed = explosionSpeed;
-                    
-                    // Reducir opacidad gradualmente durante la explosión
-                    p.explosionFade = 1;
-                }
-            }
-        });
-    }
-    
-    scatterParticles() {
-        this.particles.forEach(p => {
-            if (p.inCircle) {
-                p.scattered = true;
-                p.inCircle = false;
-                p.targetX = Math.random() * this.canvas.width;
-                p.targetY = Math.random() * this.canvas.height;
-                p.scatterSpeed = Math.random() * 3 + 2;
-            }
-        });
-    }
-    
-    collectParticles() {
-        // Recopilar partículas del círculo (borde)
-        this.circleParticles.forEach(p => {
-            if (p.exploded) {
-                p.exploded = false;
-                p.velocityX = 0;
-                p.velocityY = 0;
-                p.opacity = p.originalOpacity;
-                p.size = p.originalSize;
-                
-                // Animación GSAP para restaurar el círculo
-                if (typeof gsap !== 'undefined') {
-                    gsap.to(p, {
-                        opacity: p.originalOpacity,
-                        size: p.originalSize,
-                        duration: 0.8,
-                        ease: "power2.out"
-                    });
-                }
-            }
-        });
-        
-        // Recopilar partículas internas
-        this.innerParticles.forEach(p => {
-            if (p.exploded) {
-                p.exploded = false;
-                p.velocityX = 0;
-                p.velocityY = 0;
-                p.opacity = p.originalOpacity;
-                p.size = p.originalSize;
-                
-                // Restaurar posición dentro del círculo
-                const angle = Math.random() * Math.PI * 2;
-                const radius = Math.random() * this.circleRadius * 0.9;
-                p.angle = angle;
-                p.baseRadius = radius;
-                
-                // Animación GSAP para restaurar
-                if (typeof gsap !== 'undefined') {
-                    gsap.to(p, {
-                        opacity: p.originalOpacity,
-                        size: p.originalSize,
-                        duration: 0.8,
-                        ease: "power2.out"
-                    });
-                }
-            }
-        });
-        
-        // Recopilar partículas normales SOLO si están en el círculo
-        // Las partículas de fondo (inCircle: false desde el inicio) no deben ser recopiladas
-        this.particles.forEach(p => {
-            // Solo recopilar partículas que originalmente estaban en el círculo
-            if ((p.scattered || p.exploded) && p.inCircle === true) {
-                p.scattered = false;
-                p.exploded = false;
-                p.inCircle = true;
-                p.velocityX = 0;
-                p.velocityY = 0;
-                p.explosionFade = 1;
-                p.targetX = this.circleCenter.x + Math.cos(p.angle) * p.distance;
-                p.targetY = this.circleCenter.y + Math.sin(p.angle) * p.distance;
-            }
-            // Las partículas de fondo (inCircle: false) permanecen dispersas
-            // Solo reseteamos el estado de explosión si están explotadas
-            else if (p.exploded && !p.inCircle) {
-                p.exploded = false;
-                p.velocityX = 0;
-                p.velocityY = 0;
-                p.explosionFade = 1;
-                // Mantener posiciones aleatorias en toda la pantalla
-                p.targetX = Math.random() * this.canvas.width;
-                p.targetY = Math.random() * this.canvas.height;
-            }
-        });
-        this.explosionTriggered = false;
-        this.explosionActive = false;
-        this.explosionProgress = 0;
-    }
-    
-    showSponsors() {
-        // Deshabilitado - ya no mostramos sponsors
-        // const sponsorsContainer = document.getElementById('sponsors-container');
-        // if (sponsorsContainer) {
-        //     sponsorsContainer.classList.add('visible');
-        // }
-    }
-    
-    hideSponsors() {
-        // Deshabilitado - ya no mostramos sponsors
-        // const sponsorsContainer = document.getElementById('sponsors-container');
-        // if (sponsorsContainer) {
-        //     sponsorsContainer.classList.remove('visible');
-        // }
-    }
-    
-    drawCircle() {
-        // Solo dibujar el círculo si estamos en la sección home
-        if (!this.isHomeSection) return;
-        
-        // Permitir dibujar durante la explosión incluso si circleOpacity está bajando
-        // Dibujar si hay explosión activa (para mostrar las partículas explotando)
-        if (this.sponsorsVisible) return;
-        
-        // Solo no dibujar si no hay explosión activa Y la opacidad es 0
-        if (!this.explosionActive && this.circleOpacity <= 0) return;
-        
-        // Actualizar posiciones de las partículas del círculo (borde)
-        this.updateCircleParticlesPosition();
-        
-        // Actualizar posiciones de las partículas internas
-        if (!this.explosionActive) {
-            this.updateInnerParticlesPosition();
-        }
-        
-        // Dibujar partículas internas primero (fondo)
-        this.drawInnerParticles();
-        
-        // Dibujar círculo hecho de partículas (borde)
-        this.drawCircleParticles();
-        
-        // Dibujar logo en el centro (solo si el círculo es visible)
-        if (this.circleOpacity > 0.3) {
-            this.drawLogo();
-        }
-    }
-    
-    drawCircleParticles() {
-        this.ctx.save();
-        
-        // Durante la explosión, usar una opacidad más alta para las partículas explotando
-        const baseAlpha = this.explosionActive ? Math.max(0.3, this.circleOpacity) : this.circleOpacity;
-        this.ctx.globalAlpha = baseAlpha;
-        
-        // Durante la explosión, reducir el tamaño del círculo gradualmente
-        let currentRadius = this.circleRadius;
-        
-        if (this.explosionActive) {
-            const shrinkFactor = 1 - this.explosionProgress;
-            currentRadius = this.circleRadius * (0.3 + shrinkFactor * 0.7);
-        }
-        
-        // Actualizar radio base de las partículas
-        this.circleParticles.forEach(p => {
-            if (!p.exploded) {
-                p.baseRadius = currentRadius;
-            }
-        });
-        
-        // Dibujar cada partícula del círculo
-        this.circleParticles.forEach((p, index) => {
-            if (p.exploded) {
-                // Si está en explosión, usar física de explosión
-                p.x += p.velocityX;
-                p.y += p.velocityY;
-                p.velocityX *= 0.98;
-                p.velocityY *= 0.98;
-                // Reducir opacidad más lentamente durante la explosión para que sea visible
-                p.opacity = Math.max(0, p.opacity - 0.01);
+        if (this.particles && this.originalPositions) {
+            const positions = this.particles.geometry.attributes.position.array;
+            const scale = this.currentRadius / this.baseRadius;
+            const len = positions.length;
+            
+            for (let i = 0; i < len; i += 3) {
+                positions[i] = this.originalPositions[i] * scale;
+                positions[i + 1] = this.originalPositions[i + 1] * scale;
+                positions[i + 2] = this.originalPositions[i + 2] * scale;
             }
             
-            if (p.opacity <= 0) return;
-            
-            this.ctx.save();
-            // Para partículas en explosión, usar su propia opacidad completa para que sean visibles
-            const particleAlpha = p.exploded ? p.opacity : (p.opacity * baseAlpha);
-            this.ctx.globalAlpha = particleAlpha;
-            
-            // Estilo nuevo: partículas más pequeñas y densas con efecto de estrella
-            const glowRadius = p.size * 2.5 * (p.glowIntensity || 1);
-            
-            // Gradiente exterior más compacto
-            const gradient = this.ctx.createRadialGradient(
-                p.x, p.y, 0,
-                p.x, p.y, glowRadius
+            this.particles.geometry.attributes.position.needsUpdate = true;
+        }
+        
+        const scale = this.currentRadius / this.baseRadius;
+        
+        // Animar desvanecimiento del logo central y partículas de fondo
+        const fadeStart = 0.1;
+        let targetOpacity = 1;
+        
+        if (this.scrollProgress >= fadeStart) {
+            const fadeEnd = 0.6;
+            const fadeRange = fadeEnd - fadeStart;
+            const fadeProgress = (this.scrollProgress - fadeStart) / fadeRange;
+            targetOpacity = Math.max(0, 1 - fadeProgress);
+        }
+        
+        // Logo central
+        if (this.centerLogo) {
+            this.centerLogo.material.opacity = THREE.MathUtils.lerp(
+                this.centerLogo.material.opacity,
+                targetOpacity,
+                0.08
             );
-            
-            const centerOpacity = Math.min(1, p.opacity * 1.3);
-            const midOpacity = p.opacity * 0.7;
-            gradient.addColorStop(0, `hsla(${p.hue}, 90%, 80%, ${centerOpacity})`);
-            gradient.addColorStop(0.5, `hsla(${p.hue}, 85%, 70%, ${midOpacity})`);
-            gradient.addColorStop(0.8, `hsla(${p.hue}, 80%, 65%, ${p.opacity * 0.4})`);
-            gradient.addColorStop(1, `hsla(${p.hue}, 75%, 60%, 0)`);
-            
-            this.ctx.fillStyle = gradient;
-            this.ctx.beginPath();
-            this.ctx.arc(p.x, p.y, glowRadius * 0.5, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            // Núcleo más brillante y compacto
-            const coreGradient = this.ctx.createRadialGradient(
-                p.x, p.y, 0,
-                p.x, p.y, p.size * 0.8
-            );
-            coreGradient.addColorStop(0, `hsla(${p.hue}, 95%, 90%, ${centerOpacity})`);
-            coreGradient.addColorStop(0.6, `hsla(${p.hue}, 90%, 80%, ${p.opacity * 0.6})`);
-            coreGradient.addColorStop(1, `hsla(${p.hue}, 85%, 75%, 0)`);
-            this.ctx.fillStyle = coreGradient;
-            this.ctx.beginPath();
-            this.ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            // Agregar un pequeño punto brillante en el centro para estilo más distintivo
-            this.ctx.fillStyle = `hsla(${p.hue}, 100%, 95%, ${centerOpacity})`;
-            this.ctx.beginPath();
-            this.ctx.arc(p.x, p.y, p.size * 0.2, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            // Dibujar conexiones entre partículas adyacentes y cercanas para formar el círculo
-            if (!p.exploded && !this.explosionActive) {
-                // Conexión con partícula adyacente
-                const nextIndex = (index + 1) % this.circleParticles.length;
-                const nextP = this.circleParticles[nextIndex];
-                
-                if (!nextP.exploded) {
-                    const distance = Math.sqrt(
-                        Math.pow(nextP.x - p.x, 2) + 
-                        Math.pow(nextP.y - p.y, 2)
-                    );
-                    
-                    // Conexión más suave con gradiente de opacidad basado en distancia
-                    if (distance < 60) {
-                        const maxDistance = 60;
-                        const opacityFactor = 1 - (distance / maxDistance);
-                        const lineOpacity = opacityFactor * 0.4 * this.circleOpacity * Math.min(p.opacity, nextP.opacity);
-                        
-                        this.ctx.strokeStyle = `hsla(${(p.hue + nextP.hue) / 2}, 70%, 65%, ${lineOpacity})`;
-                        this.ctx.lineWidth = 0.8;
-                        this.ctx.beginPath();
-                        this.ctx.moveTo(p.x, p.y);
-                        this.ctx.lineTo(nextP.x, nextP.y);
-                        this.ctx.stroke();
-                    }
-                }
-            }
-            
-            this.ctx.restore();
-        });
-        
-        // Efecto de ondas durante la explosión
-        if (this.explosionActive && this.explosionProgress < 0.5) {
-            const waveCount = 3;
-            for (let i = 0; i < waveCount; i++) {
-                const waveProgress = (this.explosionProgress * 2) + (i * 0.2);
-                if (waveProgress <= 1) {
-                    const waveRadius = currentRadius + waveProgress * 200;
-                    const waveOpacity = (1 - waveProgress) * 0.3 * this.circleOpacity;
-                    
-                    this.ctx.strokeStyle = `rgba(139, 92, 246, ${waveOpacity})`;
-                    this.ctx.lineWidth = 2;
-                    this.ctx.beginPath();
-                    this.ctx.arc(this.circleCenter.x, this.circleCenter.y, waveRadius, 0, Math.PI * 2);
-                    this.ctx.stroke();
-                }
-            }
         }
         
-        this.ctx.restore();
-    }
-    
-    drawLogo() {
-        const logoSize = this.circleRadius * 0.5; // Logo más pequeño y minimalista
-        
-        if (this.logoImage && this.logoImage.complete) {
-            // Si hay imagen de logo, dibujarla con estilo minimalista
-            this.ctx.save();
-            
-            // Opacidad basada en la opacidad del círculo
-            this.ctx.globalAlpha = this.circleOpacity * 0.95;
-            
-            // Efecto de resplandor sutil alrededor del logo
-            const glowGradient = this.ctx.createRadialGradient(
-                this.circleCenter.x, this.circleCenter.y, logoSize * 0.3,
-                this.circleCenter.x, this.circleCenter.y, logoSize * 0.8
+        // Partículas de fondo
+        if (this.backgroundParticles) {
+            this.backgroundParticles.material.opacity = THREE.MathUtils.lerp(
+                this.backgroundParticles.material.opacity,
+                targetOpacity * 0.4,
+                0.08
             );
-            glowGradient.addColorStop(0, 'rgba(139, 92, 246, 0.2)');
-            glowGradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
-            
-            this.ctx.fillStyle = glowGradient;
-            this.ctx.beginPath();
-            this.ctx.arc(this.circleCenter.x, this.circleCenter.y, logoSize * 0.8, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            // Dibujar el logo
-            const imgSize = logoSize;
-            this.ctx.drawImage(
-                this.logoImage,
-                this.circleCenter.x - imgSize / 2,
-                this.circleCenter.y - imgSize / 2,
-                imgSize,
-                imgSize
-            );
-            
-            this.ctx.restore();
-        }
-    }
-    
-    updateParticles() {
-        this.particles.forEach(p => {
-            // Si la partícula está en explosión, usar física de explosión
-            if (p.exploded) {
-                // Aplicar velocidad de explosión
-                p.x += p.velocityX;
-                p.y += p.velocityY;
-                
-                // Aplicar fricción suave para que se desacelere
-                p.velocityX *= 0.98;
-                p.velocityY *= 0.98;
-                
-                // Reducir opacidad gradualmente durante la explosión
-                p.explosionFade = Math.max(0, p.explosionFade - 0.008);
-                p.opacity = (Math.random() * 0.5 + 0.2) * p.explosionFade;
-                
-                // Si la velocidad es muy baja, cambiar a movimiento normal
-                if (Math.abs(p.velocityX) < 0.1 && Math.abs(p.velocityY) < 0.1) {
-                    // Continuar moviéndose hacia el objetivo pero más lento
-                    const dx = p.targetX - p.x;
-                    const dy = p.targetY - p.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance > 1) {
-                        p.x += (dx / distance) * 0.5;
-                        p.y += (dy / distance) * 0.5;
-                    }
-                }
-            } else {
-                // Movimiento suave hacia el objetivo (comportamiento normal)
-                const dx = p.targetX - p.x;
-                const dy = p.targetY - p.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance > 1) {
-                    // Reducir velocidad para partículas de fondo
-                    const baseSpeed = p.scattered ? (p.scatterSpeed || 0.15) : p.speed;
-                    // Aplicar velocidad más lenta para partículas de fondo
-                    const speed = (!p.inCircle && p.scattered) ? baseSpeed * 0.5 : baseSpeed;
-                    p.x += (dx / distance) * speed;
-                    p.y += (dy / distance) * speed;
-                } else {
-                    // Si alcanzó el objetivo y es partícula de fondo, asignar nuevo objetivo aleatorio
-                    if (!p.inCircle && p.scattered) {
-                        p.targetX = Math.random() * this.canvas.width;
-                        p.targetY = Math.random() * this.canvas.height;
-                        // Asegurar que scatterSpeed existe con velocidad reducida
-                        if (!p.scatterSpeed) {
-                            p.scatterSpeed = Math.random() * 0.15 + 0.05;
-                        }
-                    }
-                }
-                
-                // Movimiento flotante continuo para partículas de fondo (más lento)
-                if (!p.inCircle && p.scattered) {
-                    // Movimiento suave flotante usando seno/coseno para un efecto orgánico
-                    if (!p.floatOffset) {
-                        p.floatOffset = Math.random() * Math.PI * 2;
-                        p.floatSpeed = Math.random() * 0.008 + 0.005; // Más lento
-                        p.floatAmplitude = Math.random() * 1.5 + 0.5; // Amplitud reducida
-                    }
-                    
-                    const time = Date.now() * 0.001;
-                    // Reducir aún más la velocidad del movimiento flotante
-                    const floatX = Math.sin(time * p.floatSpeed + p.floatOffset) * p.floatAmplitude * 0.6;
-                    const floatY = Math.cos(time * p.floatSpeed + p.floatOffset * 1.3) * p.floatAmplitude * 0.6;
-                    
-                    p.x += floatX;
-                    p.y += floatY;
-                    
-                    // Mantener partículas dentro de los límites del canvas
-                    if (p.x < 0) p.x = this.canvas.width;
-                    if (p.x > this.canvas.width) p.x = 0;
-                    if (p.y < 0) p.y = this.canvas.height;
-                    if (p.y > this.canvas.height) p.y = 0;
-                }
-            }
-            
-            // Si está en el círculo, mantener movimiento orbital suave
-            if (p.inCircle && !p.scattered) {
-                p.angle += 0.0015 + (p.speed * 0.001);
-                const baseX = this.circleCenter.x + Math.cos(p.angle) * p.distance;
-                const baseY = this.circleCenter.y + Math.sin(p.angle) * p.distance;
-                
-                // Interpolar hacia la posición base solo si no hay influencia del mouse
-                if (!this.mouseNearCircle) {
-                    p.targetX = baseX;
-                    p.targetY = baseY;
-                } else {
-                    // Suavizar el movimiento hacia el objetivo
-                    p.targetX += (baseX - p.targetX) * 0.05;
-                    p.targetY += (baseY - p.targetY) * 0.05;
-                }
-            }
-        });
-    }
-    
-    drawInnerParticles() {
-        this.ctx.save();
-        
-        // Durante la explosión, usar una opacidad más alta para las partículas explotando
-        const baseAlpha = this.explosionActive ? Math.max(0.3, this.circleOpacity) : this.circleOpacity;
-        this.ctx.globalAlpha = baseAlpha;
-        
-        this.innerParticles.forEach(p => {
-            if (p.exploded) {
-                // Si está en explosión, usar física de explosión
-                p.x += p.velocityX;
-                p.y += p.velocityY;
-                p.velocityX *= 0.98;
-                p.velocityY *= 0.98;
-                // Reducir opacidad más lentamente durante la explosión para que sea visible
-                p.opacity = Math.max(0, p.opacity - 0.012);
-            }
-            
-            if (p.opacity <= 0) return;
-            
-            this.ctx.save();
-            // Para partículas en explosión, usar su propia opacidad completa para que sean visibles
-            const particleAlpha = p.exploded ? p.opacity : (p.opacity * baseAlpha);
-            this.ctx.globalAlpha = particleAlpha;
-            
-            // Dibujar partícula interna con resplandor
-            const glowRadius = p.size * 2.5 * (p.glowIntensity || 1);
-            const gradient = this.ctx.createRadialGradient(
-                p.x, p.y, 0,
-                p.x, p.y, glowRadius
-            );
-            
-            const centerOpacity = Math.min(1, p.opacity * 1.1);
-            gradient.addColorStop(0, `hsla(${p.hue}, 80%, 70%, ${centerOpacity})`);
-            gradient.addColorStop(0.5, `hsla(${p.hue}, 75%, 65%, ${p.opacity * 0.5})`);
-            gradient.addColorStop(1, `hsla(${p.hue}, 70%, 60%, 0)`);
-            
-            this.ctx.fillStyle = gradient;
-            this.ctx.beginPath();
-            this.ctx.arc(p.x, p.y, glowRadius * 0.5, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            this.ctx.restore();
-        });
-        
-        this.ctx.restore();
-    }
-    
-    drawParticles() {
-        this.particles.forEach(p => {
-            // Si el círculo está oculto y la partícula está en el círculo, ocultarla también
-            if (p.inCircle && !p.scattered && !p.exploded && this.circleOpacity <= 0) {
-                return;
-            }
-            
-            // Dibujar partícula
-            this.ctx.save();
-            
-            // Aplicar opacidad del círculo a las partículas que están dentro
-            let particleAlpha = p.opacity;
-            if (p.inCircle && !p.scattered && !p.exploded) {
-                particleAlpha *= this.circleOpacity;
-            } else if (p.exploded) {
-                // Las partículas en explosión usan su propia opacidad que ya incluye explosionFade
-                particleAlpha = p.opacity;
-            }
-            
-            this.ctx.globalAlpha = particleAlpha;
-            
-            // Durante la explosión, hacer las partículas más brillantes y grandes
-            let particleRadius = p.radius;
-            let brightness = 60;
-            
-            if (p.exploded) {
-                // Partículas en explosión son más grandes y brillantes
-                particleRadius = p.radius * (1.5 + (1 - p.explosionFade) * 0.5);
-                brightness = 70 + (1 - p.explosionFade) * 20; // Más brillantes al inicio
-            }
-            
-            const gradient = this.ctx.createRadialGradient(
-                p.x, p.y, 0, 
-                p.x, p.y, particleRadius * 2
-            );
-            gradient.addColorStop(0, `hsla(${p.hue}, 70%, ${brightness}%, 1)`);
-            gradient.addColorStop(1, `hsla(${p.hue}, 70%, ${brightness}%, 0)`);
-            
-            this.ctx.fillStyle = gradient;
-            this.ctx.beginPath();
-            this.ctx.arc(p.x, p.y, particleRadius, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            this.ctx.restore();
-        });
-        
-        // Dibujar líneas de conexión entre partículas cercanas
-        if (!this.sponsorsVisible) {
-            for (let i = 0; i < this.particles.length; i++) {
-                for (let j = i + 1; j < this.particles.length; j++) {
-                    const p1 = this.particles[i];
-                    const p2 = this.particles[j];
-                    
-                    if (p1.inCircle && p2.inCircle) {
-                        const dx = p1.x - p2.x;
-                        const dy = p1.y - p2.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance < 120) {
-                            this.ctx.save();
-                            this.ctx.globalAlpha = (120 - distance) / 120 * 0.3;
-                            this.ctx.strokeStyle = `hsla(${p1.hue}, 70%, 60%, 0.3)`;
-                            this.ctx.lineWidth = 0.5;
-                            this.ctx.beginPath();
-                            this.ctx.moveTo(p1.x, p1.y);
-                            this.ctx.lineTo(p2.x, p2.y);
-                            this.ctx.stroke();
-                            this.ctx.restore();
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    checkCurrentSection() {
-        // Verificar qué sección está activa
-        const homeSection = document.getElementById('section-home');
-        if (homeSection && !homeSection.classList.contains('hidden')) {
-            if (!this.isHomeSection) {
-                // Acabamos de cambiar a home, restaurar el círculo
-                this.isHomeSection = true;
-                this.circleOpacity = 1;
-                this.explosionActive = false;
-                this.explosionTriggered = false;
-                this.explosionProgress = 0;
-                // Recolectar partículas del círculo
-                this.collectParticles();
-            }
-        } else {
-            if (this.isHomeSection) {
-                // Acabamos de salir de home, ocultar el círculo
-                this.isHomeSection = false;
-                // Dispersar todas las partículas del círculo con explosión visible
-                this.explosionActive = true;
-                this.explosionProgress = 0;
-                this.explosionTriggered = true;
-                this.triggerExplosion();
-            }
-        }
-    }
-    
-    observeSectionChanges() {
-        // Observar cambios en las secciones usando MutationObserver
-        const observer = new MutationObserver(() => {
-            this.checkCurrentSection();
-        });
-        
-        // Observar cambios en las secciones
-        const homeSection = document.getElementById('section-home');
-        if (homeSection) {
-            observer.observe(homeSection, {
-                attributes: true,
-                attributeFilter: ['class']
-            });
         }
         
-        // También verificar periódicamente
-        setInterval(() => this.checkCurrentSection(), 200);
-        
-        // Verificar al hacer clic en botones de navegación
-        document.querySelectorAll('[data-nav]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                setTimeout(() => this.checkCurrentSection(), 100);
-            });
+        this.logoSprites.forEach(sprite => {
+            const {angle, distance} = sprite.userData;
+            sprite.position.x = Math.cos(angle) * distance * scale;
+            sprite.position.y = Math.sin(angle) * distance * scale;
         });
+    }
+    
+    updateSponsorVisibility() {
+        const {scrollProgress, sponsorVisibilityStart, sponsorVisibilityEnd, sponsorFadeComplete} = this;
+        let targetOpacity = 0;
+        
+        if (scrollProgress >= sponsorVisibilityStart && scrollProgress < sponsorVisibilityEnd) {
+            targetOpacity = (scrollProgress - sponsorVisibilityStart) / (sponsorVisibilityEnd - sponsorVisibilityStart);
+        } else if (scrollProgress >= sponsorVisibilityEnd && scrollProgress < sponsorFadeComplete) {
+            targetOpacity = 1;
+        } else if (scrollProgress >= sponsorFadeComplete) {
+            targetOpacity = 1 - (scrollProgress - sponsorFadeComplete) / (1 - sponsorFadeComplete);
+        }
+        
+        this.logoSprites.forEach(sprite => {
+            sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, targetOpacity, 0.05);
+            const targetScale = sprite.userData.originalScale * (0.3 + targetOpacity * 0.7);
+            sprite.scale.x = THREE.MathUtils.lerp(sprite.scale.x, targetScale, 0.08);
+            sprite.scale.y = sprite.scale.x;
+        });
+    }
+    
+    onMouseMove(e) {
+        this.mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        this.mouseY = (e.clientY / window.innerHeight) * 2 - 1;
     }
     
     animate() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        // Actualizar posición del círculo constantemente para suavizar la animación
-        this.updateCirclePosition();
-        
-        this.updateParticles();
-        this.drawCircle(); // Dibuja círculo (borde), partículas internas y logo (solo si está en home)
-        this.drawParticles(); // Dibuja partículas normales
-        
         requestAnimationFrame(() => this.animate());
+        
+        if (this.particles) {
+            this.currentRotationY += this.rotationSpeed;
+            
+            // Rotación automática + interacción del mouse
+            this.particles.rotation.y = this.currentRotationY + this.mouseX * 0.5;
+            this.particles.rotation.x = Math.sin(this.currentRotationY * 0.5) * 0.3 + this.mouseY * 0.3;
+            this.particles.rotation.z = Math.cos(this.currentRotationY * 0.3) * 0.15;
+        }
+        
+        this.logoSprites.forEach(sprite => sprite.rotation.z = this.currentRotationY + this.mouseX * 0.5);
+        
+        // Rotar el logo del centro con la esfera
+        if (this.centerLogo) {
+            this.centerLogo.rotation.z = -(this.currentRotationY + this.mouseX * 0.5) * 0.5;
+        }
+        
+        // Animar partículas de fondo: movimiento aleatorio + interacción con mouse
+        if (this.backgroundParticles) {
+            const positions = this.backgroundParticles.geometry.attributes.position.array;
+            const velocities = this.backgroundParticles.userData.velocities;
+            const mouseX = this.mouseX;
+            const mouseY = this.mouseY;
+            
+            for (let i = 0; i < positions.length; i += 3) {
+                const idx = i / 3;
+                // Movimiento aleatorio
+                positions[i] += velocities[idx * 3];
+                positions[i + 1] += velocities[idx * 3 + 1];
+                positions[i + 2] += velocities[idx * 3 + 2];
+                
+                // Interacción con el mouse (calcular posición 3D desde 2D del mouse)
+                const mouseWorldX = mouseX * 500;
+                const mouseWorldY = -mouseY * 500;
+                
+                const dx = positions[i] - mouseWorldX;
+                const dy = positions[i + 1] - mouseWorldY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < 200) {
+                    const force = (200 - dist) / 200;
+                    positions[i] += (dx / dist) * force * 2;
+                    positions[i + 1] += (dy / dist) * force * 2;
+                    velocities[idx * 3] += (dx / dist) * force * 0.02;
+                    velocities[idx * 3 + 1] += (dy / dist) * force * 0.02;
+                }
+                
+                // Mantener dentro de límites
+                if (Math.abs(positions[i]) > 1000) velocities[idx * 3] *= -1;
+                if (Math.abs(positions[i + 1]) > 1000) velocities[idx * 3 + 1] *= -1;
+                if (Math.abs(positions[i + 2]) > 500) velocities[idx * 3 + 2] *= -1;
+                
+                // Aplicar fricción suave
+                velocities[idx * 3] *= 0.99;
+                velocities[idx * 3 + 1] *= 0.99;
+                velocities[idx * 3 + 2] *= 0.99;
+            }
+            
+            this.backgroundParticles.geometry.attributes.position.needsUpdate = true;
+        }
+        
+        this.renderer.render(this.scene, this.camera);
+    }
+    
+    hideSphere() {
+        // Ocultar solo la esfera principal, mantener partículas de fondo
+        if (this.particles) {
+            this.particles.visible = false;
+        }
+        if (this.centerLogo) {
+            this.centerLogo.visible = false;
+        }
+        if (this.logoSprites) {
+            this.logoSprites.forEach(sprite => {
+                sprite.visible = false;
+            });
+        }
+    }
+    
+    showSphere() {
+        // Mostrar la esfera principal
+        if (this.particles) {
+            this.particles.visible = true;
+        }
+        if (this.centerLogo) {
+            this.centerLogo.visible = true;
+        }
+        if (this.logoSprites) {
+            this.logoSprites.forEach(sprite => {
+                sprite.visible = true;
+            });
+        }
     }
 }
 
-// Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
     window.morphoParticles = new MorphoParticles('morpho-canvas');
 });
-
