@@ -111,6 +111,77 @@ const STYLUS_CONTRACTS_ABI = {
             "stateMutability": "payable",
             "type": "function"
         }
+    ],
+    creativeFinance: [
+        // Funciones de lectura
+        {
+            "inputs": [],
+            "name": "get_balances",
+            "outputs": [
+                {"internalType": "uint256", "name": "", "type": "uint256"},
+                {"internalType": "uint256", "name": "", "type": "uint256"}
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [{"internalType": "uint256", "name": "song_id", "type": "uint256"}],
+            "name": "get_song_info",
+            "outputs": [
+                {"internalType": "address", "name": "", "type": "address"},
+                {"internalType": "bytes32", "name": "", "type": "bytes32"},
+                {"internalType": "bytes32", "name": "", "type": "bytes32"},
+                {"internalType": "uint256", "name": "", "type": "uint256"}
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [{"internalType": "address", "name": "addr", "type": "address"}],
+            "name": "get_supporter_info",
+            "outputs": [
+                {"internalType": "uint256", "name": "", "type": "uint256"},
+                {"internalType": "uint256", "name": "", "type": "uint256"}
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        // Funciones de artista
+        {
+            "inputs": [],
+            "name": "register_artist",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {"internalType": "bytes32", "name": "title_hash", "type": "bytes32"},
+                {"internalType": "bytes32", "name": "ipfs_hash", "type": "bytes32"}
+            ],
+            "name": "upload_song",
+            "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        // Función de donación
+        {
+            "inputs": [{"internalType": "uint256", "name": "song_id", "type": "uint256"}],
+            "name": "donate",
+            "outputs": [],
+            "stateMutability": "payable",
+            "type": "function"
+        },
+        // Funciones admin
+        {
+            "inputs": [{"internalType": "address", "name": "a1", "type": "address"},
+                      {"internalType": "address", "name": "a2", "type": "address"},
+                      {"internalType": "address", "name": "a3", "type": "address"}],
+            "name": "distribute_incentives",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }
     ]
 };
 

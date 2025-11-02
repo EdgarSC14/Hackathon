@@ -397,22 +397,27 @@ button:hover::after {
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.15)) !important;
     border: 1px solid rgba(139, 92, 246, 0.3) !important;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .morpho-luna-btn::before {
     content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent);
-    transition: left 0.5s ease;
+    position: absolute !important;
+    bottom: 8px !important;
+    left: 50% !important;
+    transform: translateX(-50%) scaleX(0) !important;
+    width: calc(100% - 16px) !important;
+    height: 2px !important;
+    background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.6), transparent) !important;
+    border-radius: 2px !important;
+    transition: transform 0.4s cubic-bezier(0.36, 0.2, 0.07, 1), opacity 0.4s cubic-bezier(0.36, 0.2, 0.07, 1) !important;
+    opacity: 0 !important;
+    z-index: 1 !important;
 }
 
 .morpho-luna-btn:hover::before {
-    left: 100%;
+    transform: translateX(-50%) scaleX(1) !important;
+    opacity: 1 !important;
 }
 
 .morpho-luna-btn i {
@@ -528,8 +533,9 @@ nav.morpho-nav .nav-container {
     max-width: 1680px;
     margin-left: auto;
     margin-right: auto;
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--spacing-M);
     align-items: center;
 }
 
@@ -543,10 +549,13 @@ nav.morpho-nav .nav-brand {
     text-decoration: none;
     transition: all 0.3s cubic-bezier(0.36, 0.2, 0.07, 1);
     position: relative;
-    display: inline-block;
 }
 
-nav.morpho-nav .nav-brand::after {
+nav.morpho-nav .nav-brand-text {
+    position: relative;
+}
+
+nav.morpho-nav .nav-brand-text::after {
     content: '';
     position: absolute;
     bottom: -2px;
@@ -562,7 +571,7 @@ nav.morpho-nav .nav-brand:hover {
     transform: translateY(-1px);
 }
 
-nav.morpho-nav .nav-brand:hover::after {
+nav.morpho-nav .nav-brand:hover .nav-brand-text::after {
     width: 100%;
 }
 
@@ -572,6 +581,8 @@ nav.morpho-nav .nav-links {
     gap: var(--spacing-XS);
     align-items: center;
     position: relative;
+    justify-content: center;
+    width: 100%;
 }
 
 /* Animación de entrada para los links de navegación */

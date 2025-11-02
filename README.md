@@ -1,214 +1,310 @@
-![Image](./header.png)
+![Impulso Web3](./header.png)
 
-# Stylus Hello World
+# 🎨 Impulso Web3
 
-Project starter template for writing Arbitrum Stylus programs in Rust using the [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs). It includes a Rust implementation of a basic counter Ethereum smart contract:
+> Comunidad descentralizada que empodera a creadores y artistas mediante blockchain
 
-```js
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+**Impulso Web3** es una plataforma completa de economía creativa construida sobre **Arbitrum Stylus**, que conecta artistas con su audiencia a través de smart contracts transparentes. Utiliza Rust para implementar contratos inteligentes más eficientes y seguros que Solidity tradicional.
 
-contract Counter {
-    uint256 public number;
+---
 
-    function setNumber(uint256 newNumber) public {
-        number = newNumber;
-    }
+## 🌟 Características Principales
 
-    function increment() public {
-        number++;
-    }
+### 🎵 **Creadores**
+- **Registro de Artistas**: Sistema de verificación para artistas y creadores
+- **Subir Contenido**: Upload de canciones con hashes IPFS para almacenamiento descentralizado
+- **Gestión de Propiedad**: Control total sobre el contenido y sus ingresos
+
+### ❤️ **Apoyar Comunidad**
+- **Explorar Canciones**: Descubre y explora música de creadores independientes
+- **Donaciones Directas**: Apoya directamente a los artistas que te gustan
+- **Ranking de Donadores**: Sistema de reconocimiento para los supporters más activos
+- **Historial de Donaciones**: Rastrea todo tu apoyo a la comunidad
+
+### 💰 **Sistema de Finanzas**
+- **Distribución Automática**: 80% artista, 12% sistema, 8% incentivos
+- **Fondo de Incentivos**: Pool de recompensas para miembros activos
+- **Retiros Automáticos**: Configuración flexible de retiros para administradores
+- **Transparencia Total**: Todas las transacciones registradas on-chain
+
+### 🤖 **Luna AI**
+- **Asistente Inteligente**: Chat con IA para ayudar en la plataforma
+- **Respuestas Contextuales**: Información sobre contratos, donaciones y más
+
+---
+
+## 🏗️ Arquitectura Técnica
+
+### **Smart Contract (Rust + Arbitrum Stylus)**
+
+El contrato `CreativeFinance` está implementado en Rust usando el Stylus SDK:
+
+**Ubicación**: `src/lib.rs`
+
+**Estructura de Datos**:
+```rust
+pub struct CreativeFinance {
+    address admin;
+    mapping(address => Artist) artists;
+    mapping(uint256 => Song) songs;
+    mapping(address => Supporter) supporters;
+    uint256 song_counter;
+    uint256 system_balance;
+    uint256 incentive_pool;
+    bool paused;
+    bool reentrancy_lock;
+    // Configuración de retiros automáticos
+    address withdrawal_target;
+    uint256 withdrawal_threshold;
+    uint256 withdrawal_interval;
+    uint256 last_withdrawal_timestamp;
 }
 ```
 
-To set up more minimal example that still uses the Stylus SDK, use `cargo stylus new --minimal <YOUR_PROJECT_NAME>` under [OffchainLabs/cargo-stylus](https://github.com/OffchainLabs/cargo-stylus).
+**Funciones Principales**:
+- `register_artist()` - Registro de nuevos artistas
+- `upload_song(title_hash, ipfs_hash)` - Subir canciones
+- `donate(song_id)` - Donaciones a canciones
+- `distribute_incentives(a1, a2, a3)` - Distribución de incentivos
+- `get_balances()` - Consulta de balances
+- `get_song_info(song_id)` - Información de canciones
+- `get_supporter_info(address)` - Estadísticas de supporters
 
-## Quick Start 
+### **Frontend (HTML/CSS/JS)**
 
-Install [Rust](https://www.rust-lang.org/tools/install), and then install the Stylus CLI tool with Cargo
+- **Framework**: Vanilla JavaScript + Tailwind CSS
+- **Web3**: Web3.js para interacción con blockchain
+- **3D Graphics**: Three.js para partículas interactivas
+- **Animaciones**: GSAP para transiciones suaves
+- **IA**: Google GenAI para asistente chat
+
+### **Redes Soportadas**
+
+- Arbitrum Sepolia (Testnet)
+- Arbitrum One (Mainnet)
+
+---
+
+## 🚀 Instalación y Setup
+
+### **Prerrequisitos**
+
+1. **Rust** (última versión estable)
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
+
+2. **Stylus CLI**
+   ```bash
+   cargo install --force cargo-stylus cargo-stylus-check
+   ```
+
+3. **Target WASM**
+   ```bash
+   rustup target add wasm32-unknown-unknown
+   ```
+
+### **Clonar Repositorio**
 
 ```bash
-cargo install --force cargo-stylus cargo-stylus-check
+git clone <repository-url>
+cd Hackathon
 ```
 
-Add the `wasm32-unknown-unknown` build target to your Rust compiler:
-
-```
-rustup target add wasm32-unknown-unknown
-```
-
-You should now have it available as a Cargo subcommand:
+### **Instalar Dependencias Frontend**
 
 ```bash
-cargo stylus --help
+npm install
 ```
 
-Then, clone the template:
-
-```
-git clone https://github.com/OffchainLabs/stylus-hello-world && cd stylus-hello-world
-```
-
-### Testnet Information
-
-All testnet information, including faucets and RPC endpoints can be found [here](https://docs.arbitrum.io/stylus/reference/testnet-information).
-
-### ABI Export
-
-You can export the Solidity ABI for your program by using the `cargo stylus` tool as follows:
-
-```bash
-cargo stylus export-abi
-```
-
-which outputs:
-
-```js
-/**
- * This file was automatically generated by Stylus and represents a Rust program.
- * For more information, please see [The Stylus SDK](https://github.com/OffchainLabs/stylus-sdk-rs).
- */
-
-// SPDX-License-Identifier: MIT-OR-APACHE-2.0
-pragma solidity ^0.8.23;
-
-interface ICounter {
-    function number() external view returns (uint256);
-
-    function setNumber(uint256 new_number) external;
-
-    function mulNumber(uint256 new_number) external;
-
-    function addNumber(uint256 new_number) external;
-
-    function increment() external;
-}
-```
-
-Exporting ABIs uses a feature that is enabled by default in your Cargo.toml:
-
-```toml
-[features]
-export-abi = ["stylus-sdk/export-abi"]
-```
-
-## Deploying
-
-You can use the `cargo stylus` command to also deploy your program to the Stylus testnet. We can use the tool to first check
-our program compiles to valid WASM for Stylus and will succeed a deployment onchain without transacting. By default, this will use the Stylus testnet public RPC endpoint. See here for [Stylus testnet information](https://docs.arbitrum.io/stylus/reference/testnet-information)
+### **Verificar Compilación del Contrato**
 
 ```bash
 cargo stylus check
 ```
 
-If successful, you should see:
-
-```bash
-Finished release [optimized] target(s) in 1.88s
-Reading WASM file at stylus-hello-world/target/wasm32-unknown-unknown/release/stylus-hello-world.wasm
-Compressed WASM size: 8.9 KB
+Si todo está correcto, verás:
+```
+Finished release [optimized] target(s) in X.XXs
+Reading WASM file at target/wasm32-unknown-unknown/release/stylus-hello-world.wasm
+Compressed WASM size: XX KB
 Program succeeded Stylus onchain activation checks with Stylus version: 1
 ```
 
-Next, we can estimate the gas costs to deploy and activate our program before we send our transaction. Check out the [cargo-stylus](https://github.com/OffchainLabs/cargo-stylus) README to see the different wallet options for this step:
+---
 
-```bash
-cargo stylus deploy \
-  --private-key-path=<PRIVKEY_FILE_PATH> \
-  --estimate-gas
-```
+## 📝 Uso
 
-You will then see the estimated gas cost for deploying before transacting:
+### **Desarrollo Local**
 
-```bash
-Deploying program to address e43a32b54e48c7ec0d3d9ed2d628783c23d65020
-Estimated gas for deployment: 1874876
-```
+1. **Compilar el contrato**:
+   ```bash
+   cargo stylus check
+   ```
 
-The above only estimates gas for the deployment tx by default. To estimate gas for activation, first deploy your program using `--mode=deploy-only`, and then run `cargo stylus deploy` with the `--estimate-gas` flag, `--mode=activate-only`, and specify `--activate-program-address`.
+2. **Iniciar servidor local**:
+   ```bash
+   # Usa cualquier servidor HTTP estático
+   python -m http.server 8000
+   # o
+   npx serve
+   ```
 
+3. **Abrir en navegador**:
+   ```
+   http://localhost:8000
+   ```
 
-Here's how to deploy:
+### **Desplegar a Testnet**
 
-```bash
-cargo stylus deploy \
-  --private-key-path=<PRIVKEY_FILE_PATH>
-```
+1. **Exportar ABI**:
+   ```bash
+   cargo stylus export-abi
+   ```
 
-The CLI will send 2 transactions to deploy and activate your program onchain.
+2. **Deploy del contrato**:
+   ```bash
+   cargo stylus deploy \
+     --private-key-path=<PRIVKEY_FILE> \
+     --estimate-gas
+   ```
 
-```bash
-Compressed WASM size: 8.9 KB
-Deploying program to address 0x457b1ba688e9854bdbed2f473f7510c476a3da09
-Estimated gas: 1973450
-Submitting tx...
-Confirmed tx 0x42db…7311, gas used 1973450
-Activating program at address 0x457b1ba688e9854bdbed2f473f7510c476a3da09
-Estimated gas: 14044638
-Submitting tx...
-Confirmed tx 0x0bdb…3307, gas used 14044638
-```
+3. **Actualizar direcciones**:
+   - Edita `contracts-arbitrum.js` con la dirección del contrato desplegado
 
-Once both steps are successful, you can interact with your program as you would with any Ethereum smart contract.
+### **Flujo de Usuario**
 
-## Calling Your Program
+1. **Creadores**:
+   - Conecta tu wallet (MetaMask recomendado)
+   - Regístrate como artista
+   - Sube tus canciones con hash IPFS
+   - Recibe donaciones directamente
 
-This template includes an example of how to call and transact with your program in Rust using [ethers-rs](https://github.com/gakonst/ethers-rs) under the `examples/counter.rs`. However, your programs are also Ethereum ABI equivalent if using the Stylus SDK. **They can be called and transacted with using any other Ethereum tooling.**
+2. **Donadores**:
+   - Explora canciones disponibles
+   - Escucha y dona a tus favoritos
+   - Rastrea tu historial
+   - Compite en el ranking de supporters
 
-By using the program address from your deployment step above, and your wallet, you can attempt to call the counter program and increase its value in storage:
+3. **Administradores**:
+   - Configura retiros automáticos
+   - Distribuye incentivos
+   - Gestiona el sistema global
 
-```rs
-abigen!(
-    Counter,
-    r#"[
-        function number() external view returns (uint256)
-        function setNumber(uint256 number) external
-        function increment() external
-    ]"#
-);
-let counter = Counter::new(address, client);
-let num = counter.number().call().await;
-println!("Counter number value = {:?}", num);
+---
 
-let _ = counter.increment().send().await?.await?;
-println!("Successfully incremented counter via a tx");
+## 🔒 Seguridad
 
-let num = counter.number().call().await;
-println!("New counter number value = {:?}", num);
-```
+- ✅ **Reentrancy Protection**: Lock incorporado
+- ✅ **Pausable**: Sistema de pausa para emergencias
+- ✅ **Access Control**: Solo admin para funciones críticas
+- ✅ **Validación de Parámetros**: Checks en todas las funciones
+- ✅ **Overflow Protection**: U256 para cálculos seguros
 
-Before running, set the following env vars or place them in a `.env` file (see: [.env.example](./.env.example)) in this project:
+---
 
-```
-RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
-STYLUS_CONTRACT_ADDRESS=<the onchain address of your deployed program>
-PRIV_KEY_PATH=<the file path for your priv key to transact with>
-```
+## 📊 Distribución de Fondos
 
-Next, run:
-
-```
-cargo run --example counter --target=<YOUR_ARCHITECTURE>
-```
-
-Where you can find `YOUR_ARCHITECTURE` by running `rustc -vV | grep host`. For M1 Apple computers, for example, this is `aarch64-apple-darwin` and for most Linux x86 it is `x86_64-unknown-linux-gnu`
-
-## Build Options
-
-By default, the cargo stylus tool will build your project for WASM using sensible optimizations, but you can control how this gets compiled by seeing the full README for [cargo stylus](https://github.com/OffchainLabs/cargo-stylus). If you wish to optimize the size of your compiled WASM, see the different options available [here](https://github.com/OffchainLabs/cargo-stylus/blob/main/OPTIMIZING_BINARIES.md).
-
-## Peeking Under the Hood
-
-The [stylus-sdk](https://github.com/OffchainLabs/stylus-sdk-rs) contains many features for writing Stylus programs in Rust. It also provides helpful macros to make the experience for Solidity developers easier. These macros expand your code into pure Rust code that can then be compiled to WASM. If you want to see what the `stylus-hello-world` boilerplate expands into, you can use `cargo expand` to see the pure Rust code that will be deployed onchain.
-
-First, run `cargo install cargo-expand` if you don't have the subcommand already, then:
+Cada donación se divide automáticamente:
 
 ```
-cargo expand --all-features --release --target=<YOUR_ARCHITECTURE>
+100% Donación
+  ├─ 80% → Artista (directo)
+  ├─ 12% → Sistema (reserva)
+  └─ 8% → Pool de Incentivos
 ```
 
-Where you can find `YOUR_ARCHITECTURE` by running `rustc -vV | grep host`. For M1 Apple computers, for example, this is `aarch64-apple-darwin`.
+### **Pool de Incentivos**
 
-## License
+Distribución a top 3:
+- 🥇 Primer lugar: 50%
+- 🥈 Segundo lugar: 30%
+- 🥉 Tercer lugar: 20%
 
-This project is fully open source, including an Apache-2.0 or MIT license at your choosing under your own copyright.
+---
+
+## 🎯 Tracks del Hackathon Cubiertos
+
+- ✅ **Arbitrum Stylus**: Contratos Rust sobre Arbitrum
+- ✅ **Creatividad y Economías de Creadores**: Plataforma para artistas
+- ✅ **Finanzas Descentralizadas**: DeFi para creadores
+- ✅ **Inclusión Financiera**: Acceso abierto y transparente
+
+---
+
+## 🛠️ Stack Tecnológico
+
+**Backend/Blockchain**:
+- Rust
+- Arbitrum Stylus SDK
+- WASM Compilation
+
+**Frontend**:
+- HTML5
+- Tailwind CSS
+- Vanilla JavaScript
+- Web3.js
+- Three.js
+- GSAP
+
+**Integraciones**:
+- MetaMask
+- IPFS (para contenido)
+- Google Generative AI
+- Font Awesome
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+Hackathon/
+├── src/                    # Contrato Rust
+│   ├── lib.rs             # Lógica principal
+│   └── main.rs            # Entry point
+├── index.html             # Frontend principal
+├── app.js                 # Lógica JavaScript
+├── styles.css             # Estilos
+├── morpho-particles.js    # Sistema 3D
+├── contracts-arbitrum.js  # Direcciones de contratos
+├── stylus-contracts.js    # ABIs
+├── networks.js            # Configuración de redes
+├── Cargo.toml             # Dependencias Rust
+├── package.json           # Dependencias JS
+└── README.md              # Este archivo
+```
+
+---
+
+## 🤝 Contribuir
+
+Este proyecto está abierto a contribuciones. Algunas ideas:
+
+- Mejorar la UI/UX
+- Agregar más funcionalidades de DeFi
+- Integración con más redes
+- Optimizaciones de gas
+- Tests adicionales
+
+---
+
+## 📄 Licencia
+
+Este proyecto está bajo licencia MIT. Ver archivos de licencia en `licenses/`.
+
+---
+
+## 🌐 Enlaces
+
+- **YouTube**: [@vicdanielpaz4949](https://www.youtube.com/@vicdanielpaz4949)
+- **Arbitrum Stylus Docs**: [docs.arbitrum.io/stylus](https://docs.arbitrum.io/stylus)
+
+---
+
+## 📞 Contacto
+
+Para preguntas sobre el proyecto, abre un issue o contacta al equipo.
+
+---
+
+**Hecho con ❤️ para la comunidad creativa**

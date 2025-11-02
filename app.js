@@ -980,7 +980,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Navegación de secciones con animaciones suaves
     function showSection(key) {
-        const ids = ['home','creadores-section','apoyar','incentivos','finanzas','creadores-old','arbitrum','scroll','deploy'];
+        const ids = ['home','creadores-section','apoyar','creadores-old','arbitrum','deploy'];
         
         // Obtener la sección actual visible
         const currentSection = document.querySelector('.section-morpho:not(.hidden)');
@@ -2025,4 +2025,106 @@ async function invest(amount) {
         // Nota: Por seguridad, no podemos modificar archivos del servidor desde el navegador
         // El usuario debe actualizar manualmente
     };
+
+// ========== FUNCIONES DE DONACIONES A CANCIONES ==========
+
+// Wallet destino para donaciones
+const DONATION_WALLET = '0xcac52a9ccb14c5e5bbcc30deb0b0ccc0eee4fc55';
+
+// Función para donar a una canción
+async function donateToSong(songId, amount) {
+    if (!window.ethereum || !userAddress) {
+        alert('Por favor, conecta tu wallet primero');
+        return;
+    }
+
+    if (!amount || amount <= 0) {
+        alert('Por favor, ingresa un monto válido');
+        return;
+    }
+
+    try {
+        await checkAndSwitchNetwork();
+        const web3i = getWeb3();
+        
+        // Convertir el monto a wei
+        const amountWei = web3i.utils.toWei(amount.toString(), 'ether');
+        
+        // Enviar directamente a la wallet de donaciones
+        console.log(`Enviando ${amount} ETH a ${DONATION_WALLET}`);
+        
+        const tx = await web3i.eth.sendTransaction({
+            from: userAddress,
+            to: DONATION_WALLET,
+            value: amountWei,
+            gas: 21000  // Gas estándar para transferencias de ETH
+        });
+
+        alert(`✅ ¡Donación exitosa! ${amount} ETH donados a la canción ${songId}`);
+        console.log('Transacción exitosa:', tx.transactionHash);
+        
+        // Mostrar link del explorador
+        const network = getCurrentNetwork();
+        const explorerUrl = network.blockExplorerUrls[0];
+        console.log(`Ver transacción: ${explorerUrl}/tx/${tx.transactionHash}`);
+
+    } catch (error) {
+        console.error('Error al donar:', error);
+        if (error.message.includes('user denied')) {
+            alert('❌ Donación cancelada por el usuario');
+        } else if (error.message.includes('insufficient funds')) {
+            alert('❌ Saldo insuficiente para completar la donación');
+        } else {
+            alert(`❌ Error al donar: ${error.message}`);
+        }
+    }
+}
+
+// Event listener para los botones de donación
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar listeners a todos los botones de donación existentes
+    const donateButtons = document.querySelectorAll('.donate-song-btn');
+    donateButtons.forEach(button => {
+        button.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            const songId = this.getAttribute('data-song-id');
+            
+            if (!songId) {
+                alert('Error: No se pudo obtener el ID de la canción');
+                return;
+            }
+
+            // Pedir el monto al usuario
+            const amountStr = prompt(`Ingresa el monto a donar (en ETH) para la canción ${songId}:`, '0.01');
+            
+            if (amountStr === null) {
+                // Usuario canceló
+                return;
+            }
+
+            const amount = parseFloat(amountStr);
+            
+            if (isNaN(amount) || amount <= 0) {
+                alert('Por favor, ingresa un monto válido mayor a 0');
+                return;
+            }
+
+            // Mostrar loading
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+            this.disabled = true;
+
+            try {
+                await donateToSong(parseInt(songId), amount);
+            } catch (error) {
+                console.error('Error en handler de donación:', error);
+            } finally {
+                // Restaurar botón
+                this.innerHTML = originalText;
+                this.disabled = false;
+            }
+        });
+    });
+});
 })();

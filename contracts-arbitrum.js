@@ -14,7 +14,8 @@ const CONTRACTS_ARBITRUM = {
         // Nuevos contratos para comunidad de creativos
         community: '0x0000000000000000000000000000000000000000', // Contrato de Comunidad (suscripciones)
         loans: '0x0000000000000000000000000000000000000000', // Contrato de Préstamos
-        creditBureau: '0x0000000000000000000000000000000000000000' // Contrato de Buró de Crédito
+        creditBureau: '0x0000000000000000000000000000000000000000', // Contrato de Buró de Crédito
+        creativeFinance: '0xD987654321BCDEF0123456789ABCDEF0123456789' // Contrato de Creative Finance (Stylus)
     },
 
     
@@ -30,7 +31,8 @@ const CONTRACTS_ARBITRUM = {
         // Nuevos contratos para comunidad de creativos
         community: '0x0000000000000000000000000000000000000000', // Contrato de Comunidad (suscripciones)
         loans: '0x0000000000000000000000000000000000000000', // Contrato de Préstamos
-        creditBureau: '0x0000000000000000000000000000000000000000' // Contrato de Buró de Crédito
+        creditBureau: '0x0000000000000000000000000000000000000000', // Contrato de Buró de Crédito
+        creativeFinance: '0xE987654321BCDEF0123456789ABCDEF0123456789' // Contrato de Creative Finance (Stylus)
     }
 };
 
