@@ -933,6 +933,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Evento para botón de conexión en la sección de inicio
+    const connectWalletHomeButton = document.getElementById('connectWalletHome');
+    if (connectWalletHomeButton) {
+        connectWalletHomeButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            connectWallet();
+        });
+    }
+
     // Cerrar el menú al hacer clic fuera
     document.addEventListener('click', function(e) {
         // Cerrar dropdown de wallet
@@ -970,7 +980,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Navegación de secciones con animaciones suaves
     function showSection(key) {
-        const ids = ['home','finanzas','creadores','arbitrum','scroll','deploy'];
+        const ids = ['home','creadores-section','apoyar','incentivos','finanzas','creadores-old','arbitrum','scroll','deploy'];
         
         // Obtener la sección actual visible
         const currentSection = document.querySelector('.section-morpho:not(.hidden)');

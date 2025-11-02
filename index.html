@@ -24,11 +24,10 @@
                 <a href="#" class="nav-brand">Impulso Web3</a>
                 <div class="nav-links hidden md:flex">
                     <button class="morpho-rounded-button morpho-nav-button" data-nav="home">Inicio</button>
-                    <button class="morpho-rounded-button morpho-nav-button" data-nav="finanzas">Finanzas Inclusivas</button>
-                    <button class="morpho-rounded-button morpho-nav-button" data-nav="creadores">Creadores</button>
-                    <button class="morpho-rounded-button morpho-nav-button" data-nav="arbitrum">Innovación en Arbitrum</button>
-                    <button class="morpho-rounded-button morpho-nav-button" data-nav="scroll">DeFi & Scroll</button>
-                    <button class="morpho-rounded-button morpho-nav-button" data-nav="deploy">Desplegar Stylus</button>
+                    <button class="morpho-rounded-button morpho-nav-button" data-nav="creadores-section">Creadores</button>
+                    <button class="morpho-rounded-button morpho-nav-button" data-nav="apoyar">Apoyar Comunidad</button>
+                    <button class="morpho-rounded-button morpho-nav-button" data-nav="incentivos">Fondo de Incentivos</button>
+                    <button class="morpho-rounded-button morpho-nav-button" data-nav="finanzas">Finanzas & Retiros</button>
                     <button id="lunaNavBtn" class="morpho-rounded-button morpho-nav-button morpho-luna-btn">
                         <i class="fas fa-sparkles mr-2"></i>
                         <span>Luna AI</span>
@@ -128,11 +127,10 @@
         <!-- Navegación móvil -->
         <div class="nav-mobile-morpho">
             <button data-nav="home">Inicio</button>
+            <button data-nav="creadores-section">Creadores</button>
+            <button data-nav="apoyar">Apoyar</button>
+            <button data-nav="incentivos">Incentivos</button>
             <button data-nav="finanzas">Finanzas</button>
-            <button data-nav="creadores">Creadores</button>
-            <button data-nav="arbitrum">Arbitrum</button>
-            <button data-nav="scroll">Scroll</button>
-            <button class="col-span-2" data-nav="deploy">Desplegar Stylus</button>
         </div>
         
         <!-- Hero Section con Título y Descripción -->
@@ -160,180 +158,152 @@
             </div>
         </section>
         
-        <!-- Secciones por categoría -->
+        <!-- Sección Inicio -->
         <section id="section-home" class="section-morpho">
-            <h2 class="section-morpho-title text-gradient-morpho">Explora las categorías</h2>
-            <p class="section-morpho-subtitle">Selecciona una categoría para ver funcionalidades y comenzar.</p>
-            <div class="grid-morpho grid-morpho-3">
-                <div class="morpho-card scroll-reveal-enhanced">
-                    <h3 class="text-xl font-light mb-3">Finanzas y Sistemas de Pago para la Inclusión</h3>
-                    <p class="text-gray-400 mb-4">Ahorro, pagos por QR, remesas y microcréditos en Arbitrum.</p>
-                    <button class="btn-morpho btn-morpho-ghost" data-nav="finanzas">Ver más</button>
-                </div>
-                <div class="morpho-card scroll-reveal-enhanced">
-                    <h3 class="text-xl font-light mb-3">Creatividad y Economía de Creadores</h3>
-                    <p class="text-gray-400 mb-4">Suscripciones, regalías y colaboración equitativa.</p>
-                    <button class="btn-morpho btn-morpho-ghost" data-nav="creadores">Ver más</button>
-                </div>
-                <div class="morpho-card scroll-reveal-enhanced">
-                    <h3 class="text-xl font-light mb-3">Innovación en Arbitrum</h3>
-                    <p class="text-gray-400 mb-4">One, Stylus, Orbit: velocidad, bajo costo y seguridad de Ethereum.</p>
-                    <button class="btn-morpho btn-morpho-ghost" data-nav="arbitrum">Ver más</button>
-                </div>
-            </div>
-            
-            <!-- Segunda fila de categorías -->
-            <div class="grid-morpho grid-morpho-3 mt-6">
-                <div class="morpho-card scroll-reveal-enhanced">
-                    <h3 class="text-xl font-light mb-3">DeFi & Sistemas de Pago en Scroll</h3>
-                    <p class="text-gray-400 mb-4">Aplicaciones financieras innovadoras construidas sobre zkEVM de Scroll.</p>
-                    <button class="btn-morpho btn-morpho-ghost" data-nav="scroll">Ver más</button>
-                </div>
-            </div>
-
-            <!-- Features solo en Inicio -->
-            <div class="grid-morpho grid-morpho-3 mt-12">
-                <div class="morpho-card scroll-reveal-enhanced">
-                    <div class="text-4xl mb-4">💳</div>
-                    <h3 class="text-xl font-light mb-3">Pagos Inclusivos</h3>
-                    <p class="text-gray-400 mb-6">Cobra con QR, envía remesas y paga con stablecoins.</p>
-                    <button class="btn-morpho btn-morpho-accent" data-nav="finanzas">
-                        Ir a Finanzas
-                    </button>
-                </div>
-
-                <div class="morpho-card scroll-reveal-enhanced">
-                    <div class="text-4xl mb-4">🎨</div>
-                    <h3 class="text-xl font-light mb-3">Creadores</h3>
-                    <p class="text-gray-400 mb-6">Suscripciones, regalías justas y experiencias con tu audiencia.</p>
-                    <button class="btn-morpho btn-morpho-accent" data-nav="creadores">
-                        Ir a Creadores
-                    </button>
-                </div>
-
-                <div class="morpho-card scroll-reveal-enhanced">
-                    <div class="text-4xl mb-4">⚡</div>
-                    <h3 class="text-xl font-light mb-3">Arbitrum L2</h3>
-                    <p class="text-gray-400 mb-6">Pagos y productos DeFi rápidos y económicos en Arbitrum.</p>
-                    <button class="btn-morpho btn-morpho-accent" data-nav="arbitrum">
-                        Ir a Arbitrum
-                    </button>
-                </div>
-                
-                <div class="morpho-card scroll-reveal-enhanced">
-                    <div class="text-4xl mb-4">🚀</div>
-                    <h3 class="text-xl font-light mb-3">Scroll zkEVM</h3>
-                    <p class="text-gray-400 mb-6">DeFi y pagos con velocidad, seguridad y compatibilidad nativa de Ethereum.</p>
-                    <button class="btn-morpho btn-morpho-accent" data-nav="scroll">
-                        Ir a Scroll
-                    </button>
-                </div>
-            </div>
-
-            <!-- Stats solo en Inicio -->
-            <section class="mt-12">
-                <div class="grid-morpho grid-morpho-3">
-                    <div class="stats-card-morpho scroll-reveal-enhanced">
-                        <div class="stats-number">1,234</div>
-                        <div class="stats-label">Miembros Activos</div>
-                    </div>
-                    <div class="stats-card-morpho scroll-reveal-enhanced">
-                        <div class="stats-number">$500K</div>
-                        <div class="stats-label">Invertidos</div>
-                    </div>
-                    <div class="stats-card-morpho scroll-reveal-enhanced">
-                        <div class="stats-number">24</div>
-                        <div class="stats-label">Comunidades Aliadas</div>
-                    </div>
-                </div>
-            </section>
-        </section>
-
-        <section id="section-finanzas" class="section-morpho hidden">
-            <div class="flex items-center gap-4 mb-6 flex-wrap">
-                <h2 class="section-morpho-title text-gradient-morpho">Finanzas y Sistemas de Pago para la Inclusión</h2>
-                <span class="badge-morpho">
-                    <i class="fas fa-code"></i> Powered by Stylus (Rust)
-                </span>
-            </div>
-            <p class="section-morpho-subtitle">Ampliar el acceso a herramientas financieras justas y transparentes. Nuestros contratos están escritos en Rust usando Arbitrum Stylus para máximo rendimiento y seguridad.</p>
-            <ul class="list-morpho mb-8">
-                <li>Sistemas de pago con QR/NFC/WhatsApp</li>
-                <li>Préstamos y microcréditos comunitarios</li>
-                <li>Stablecoins para ahorro y remesas</li>
-            </ul>
-            <div class="grid-morpho grid-morpho-3">
-                <button class="btn-morpho btn-morpho-accent" id="cta-pago-qr">Pagar por QR</button>
-                <button class="btn-morpho btn-morpho-accent" id="cta-generar-qr">Generar QR para Cobro</button>
-                <button class="btn-morpho btn-morpho-accent" id="cta-remesa">Enviar remesa</button>
-            </div>
-
-            <!-- Balance del Contrato Stylus -->
-            <div class="morpho-card mt-8">
-                <h3 class="text-xl font-light mb-6 flex items-center gap-2">
-                    <i class="fas fa-wallet"></i>
-                    Balance en Contrato Stylus
-                </h3>
-                <div class="grid-morpho grid-morpho-3 mb-6">
-                    <div class="stats-card-morpho">
-                        <div class="text-sm text-gray-400 mb-2">Balance Depositado</div>
-                        <div id="stylusBalance" class="stats-number text-2xl">0.0000 ETH</div>
-                    </div>
-                    <div class="stats-card-morpho">
-                        <div class="text-sm text-gray-400 mb-2">Estado</div>
-                        <div id="stylusStatus" class="text-lg font-light text-green-400">✓ Conectado</div>
-                    </div>
-                    <div class="stats-card-morpho">
-                        <button onclick="refreshStylusBalance()" class="btn-morpho btn-morpho-primary w-full">
-                            <i class="fas fa-sync-alt"></i>Actualizar
-                        </button>
-                    </div>
-                </div>
-                <div class="text-sm text-gray-400 flex items-center gap-2">
-                    <i class="fas fa-info-circle"></i>
-                    Deposita fondos primero para usar pagos con el contrato Stylus. Los pagos se realizarán desde tu balance depositado.
-                </div>
-            </div>
-
-            <!-- Depositar en Contrato Stylus -->
-            <div class="morpho-card mt-6">
-                <h3 class="text-xl font-light mb-4">💳 Depositar en Contrato Stylus</h3>
-                <p class="text-gray-400 mb-6 text-sm">Deposita ETH en el contrato Stylus para poder realizar pagos usando el contrato inteligente.</p>
-                <div class="grid-morpho grid-morpho-3">
-                    <input id="depositAmount" type="number" step="0.0001" min="0.0001" class="input-morpho" placeholder="Monto a depositar (ETH)">
-                    <button id="depositButton" class="btn-morpho btn-morpho-accent">
-                        <i class="fas fa-arrow-down"></i>Depositar
-                    </button>
-                    <button id="withdrawButton" class="btn-morpho btn-morpho-ghost">
-                        <i class="fas fa-arrow-up"></i>Retirar
-                    </button>
-                </div>
-                <input id="withdrawAmount" type="number" step="0.0001" min="0.0001" class="input-morpho mt-4 w-full md:w-auto" placeholder="Monto a retirar (ETH)" style="display: none;">
-            </div>
-
-            <!-- Remesas Form -->
-            <div class="morpho-card mt-8">
-                <h3 class="section-morpho-title mb-6">Enviar Remesa</h3>
-                <div class="mb-6 p-4 morpho-card">
-                    <div class="flex items-center gap-3">
-                        <input type="checkbox" id="useStylusPayment" checked class="rounded">
-                        <label for="useStylusPayment" class="text-gray-300 cursor-pointer">
-                            <strong>Usar Contrato Stylus</strong> (pagos desde balance depositado - más seguro y eficiente)
-                        </label>
-                    </div>
-                </div>
-                <div class="grid-morpho grid-morpho-3">
-                    <input id="remesaAddress" class="input-morpho" placeholder="Dirección destino 0x...">
-                    <input id="remesaAmount" type="number" step="0.0001" min="0" class="input-morpho" placeholder="Monto">
-                    <button id="remesaSendBtn" class="btn-morpho btn-morpho-accent">Enviar</button>
-                </div>
-                <p class="text-sm text-gray-400 mt-4">
-                    <span id="paymentMethod">Se usará el contrato Stylus</span> si tienes balance suficiente, sino se usará transferencia nativa.
+            <!-- Banner con resumen del proyecto -->
+            <div class="morpho-card mb-8 scroll-reveal-enhanced">
+                <h2 class="section-morpho-title text-gradient-morpho mb-4">Bienvenido a la Comunidad Creativa</h2>
+                <p class="section-morpho-subtitle text-lg">
+                    Plataforma transparente que conecta artistas con su audiencia. Los donadores apoyan el arte que aman 
+                    y reciben recompensas, mientras los artistas reciben el apoyo que merecen.
                 </p>
             </div>
+
+            <!-- Datos globales del sistema -->
+            <div class="grid-morpho grid-morpho-3 mb-8">
+                <div class="stats-card-morpho scroll-reveal-enhanced">
+                    <div class="text-4xl mb-2">💰</div>
+                    <div class="stats-number" id="globalSystemBalance">0 ETH</div>
+                    <div class="stats-label">Saldo del Sistema</div>
+                </div>
+                <div class="stats-card-morpho scroll-reveal-enhanced">
+                    <div class="text-4xl mb-2">🎁</div>
+                    <div class="stats-number" id="globalIncentiveFund">0 ETH</div>
+                    <div class="stats-label">Fondo de Incentivos</div>
+                </div>
+                <div class="stats-card-morpho scroll-reveal-enhanced">
+                    <div class="text-4xl mb-2">❤️</div>
+                    <div class="stats-number" id="globalTotalDonations">0 ETH</div>
+                    <div class="stats-label">Total Donaciones</div>
+                </div>
+            </div>
+
+            <!-- Botón Conectar Wallet destacado -->
+            <div class="flex justify-center mb-8">
+                <button id="connectWalletHome" class="btn-morpho btn-morpho-accent">
+                    <i class="fas fa-wallet mr-2"></i>
+                    Conectarse con Wallet
+                </button>
+            </div>
         </section>
 
-        <section id="section-creadores" class="section-morpho hidden">
+        <!-- Sección Finanzas & Retiros (Admin) -->
+        <section id="section-finanzas" class="section-morpho hidden">
+            <h2 class="section-morpho-title text-gradient-morpho mb-8">Finanzas & Retiros</h2>
+            <p class="section-morpho-subtitle mb-6">Panel exclusivo para administradores</p>
+            
+            <!-- Balance del Sistema -->
+            <div class="morpho-card mb-8">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">💼</span> Balance del Sistema
+                </h3>
+                <div class="stats-card-morpho mb-4">
+                    <div class="text-sm text-gray-400 mb-2">Saldo Total</div>
+                    <div id="adminSystemBalance" class="stats-number text-3xl">0 ETH</div>
+                </div>
+                <button id="refreshAdminBalanceBtn" class="btn-morpho btn-morpho-primary">
+                    <i class="fas fa-sync-alt mr-2"></i>Actualizar Balance
+                </button>
+            </div>
+
+            <!-- Retiro Manual -->
+            <div class="morpho-card mb-8">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">🔄</span> Retiro Manual
+                </h3>
+                <div class="grid-morpho grid-morpho-1 gap-4">
+                    <input id="withdrawToAddress" type="text" class="input-morpho" placeholder="Dirección destino: 0x...">
+                    <input id="withdrawAmountAdmin" type="number" step="0.0001" min="0.0001" class="input-morpho" placeholder="Monto a retirar (ETH)">
+                    <button id="withdrawManuallyBtn" class="btn-morpho btn-morpho-accent">
+                        <i class="fas fa-paper-plane mr-2"></i>Retirar Manualmente
+                    </button>
+                </div>
+            </div>
+
+            <!-- Configurar Retiros Automáticos -->
+            <div class="morpho-card mb-8">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">⚙️</span> Configurar Retiros Automáticos
+                </h3>
+                <p class="text-gray-400 mb-4">Configura el sistema para retiros automáticos cuando se alcancen ciertos límites</p>
+                <div class="grid-morpho grid-morpho-1 gap-4">
+                    <input id="autoTargetAddress" type="text" class="input-morpho" placeholder="Dirección objetivo: 0x...">
+                    <input id="autoThreshold" type="number" step="0.1" min="0.1" class="input-morpho" placeholder="Umbral mínimo (ETH)">
+                    <input id="autoInterval" type="number" step="1" min="1" class="input-morpho" placeholder="Intervalo (días)">
+                    <button id="setAutoWithdrawConfigBtn" class="btn-morpho btn-morpho-accent">
+                        <i class="fas fa-save mr-2"></i>Guardar Configuración
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ejecutar Retiro Automático -->
+            <div class="morpho-card">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">🚀</span> Ejecutar Retiro Automático
+                </h3>
+                <p class="text-gray-400 mb-4">Ejecuta manualmente el retiro automático basado en la configuración actual</p>
+                <button id="executeAutoWithdrawBtn" class="btn-morpho btn-morpho-accent">
+                    <i class="fas fa-play-circle mr-2"></i>Ejecutar Retiro Automático
+                </button>
+            </div>
+        </section>
+
+        <!-- Sección Creadores -->
+        <section id="section-creadores-section" class="section-morpho hidden">
+            <h2 class="section-morpho-title text-gradient-morpho mb-8">Creadores</h2>
+            
+            <!-- Registro de Artista -->
+            <div class="morpho-card mb-8">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">🪪</span> Registro de Artista
+                </h3>
+                <p class="text-gray-400 mb-4">Regístrate como artista para comenzar a subir tu contenido</p>
+                <div class="grid-morpho grid-morpho-1 gap-4">
+                    <input id="artistName" type="text" class="input-morpho" placeholder="Nombre artístico">
+                    <button id="registerArtistBtn" class="btn-morpho btn-morpho-accent">
+                        <i class="fas fa-user-plus mr-2"></i>Registrarse como Artista
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mis Canciones -->
+            <div class="morpho-card mb-8">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">🎵</span> Mis Canciones
+                </h3>
+                <div id="mySongsList" class="space-y-4">
+                    <p class="text-gray-400 text-sm">No tienes canciones subidas aún</p>
+                </div>
+            </div>
+
+            <!-- Subir Canción -->
+            <div class="morpho-card">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">➕</span> Subir Canción
+                </h3>
+                <p class="text-gray-400 mb-4">Comparte tu música con la comunidad</p>
+                <div class="grid-morpho grid-morpho-1 gap-4">
+                    <input id="songTitle" type="text" class="input-morpho" placeholder="Título de la canción">
+                    <input id="songIpfsHash" type="text" class="input-morpho" placeholder="IPFS Hash (content identifier)">
+                    <button id="uploadSongBtn" class="btn-morpho btn-morpho-accent">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i>Subir Canción
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Antigua de Creadores (oculta) -->
+        <section id="section-creadores-old" class="section-morpho hidden">
             <div class="flex items-center gap-4 mb-6 flex-wrap">
                 <h2 class="section-morpho-title text-gradient-morpho">Creatividad y Economía de Creadores</h2>
                 <span class="badge-morpho">
@@ -697,7 +667,95 @@
             </div>
         </section>
 
-        <!-- Sección Desplegar Stylus -->
+        <!-- Sección Apoyar Comunidad -->
+        <section id="section-apoyar" class="section-morpho hidden">
+            <h2 class="section-morpho-title text-gradient-morpho mb-8">Apoyar Comunidad</h2>
+            
+            <!-- Explorar Canciones -->
+            <div class="morpho-card mb-8">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">❤️</span> Explorar Canciones
+                </h3>
+                <div id="songsList" class="space-y-4">
+                    <div class="song-item p-4 bg-gray-800/50 rounded-lg">
+                        <p class="text-gray-400 text-sm">Cargando canciones...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mis Donaciones -->
+            <div class="morpho-card mb-8">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">💰</span> Mis Donaciones
+                </h3>
+                <div id="myDonationsList" class="space-y-3">
+                    <p class="text-gray-400 text-sm">No has realizado donaciones aún</p>
+                </div>
+            </div>
+
+            <!-- Ranking de Donadores -->
+            <div class="morpho-card">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">🏆</span> Ranking de Donadores
+                </h3>
+                <div id="topDonorsList" class="space-y-3">
+                    <p class="text-gray-400 text-sm">Cargando ranking...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Fondo de Incentivos -->
+        <section id="section-incentivos" class="section-morpho hidden">
+            <h2 class="section-morpho-title text-gradient-morpho mb-8">Fondo de Incentivos</h2>
+            
+            <!-- Fondo Actual -->
+            <div class="morpho-card mb-8">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">📊</span> Fondo Actual
+                </h3>
+                <div class="grid-morpho grid-morpho-2">
+                    <div class="stats-card-morpho">
+                        <div class="text-sm text-gray-400 mb-2">Saldo del Sistema</div>
+                        <div id="systemBalance" class="stats-number text-2xl">0 ETH</div>
+                    </div>
+                    <div class="stats-card-morpho">
+                        <div class="text-sm text-gray-400 mb-2">Fondo de Incentivos</div>
+                        <div id="incentiveFundBalance" class="stats-number text-2xl">0 ETH</div>
+                    </div>
+                </div>
+                <button id="refreshBalancesBtn" class="btn-morpho btn-morpho-primary mt-4">
+                    <i class="fas fa-sync-alt mr-2"></i>Actualizar Saldos
+                </button>
+            </div>
+
+            <!-- Distribuir Incentivos (Admin) -->
+            <div class="morpho-card mb-8">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">🥇</span> Distribuir Incentivos (Admin)
+                </h3>
+                <p class="text-gray-400 mb-4">Distribuye recompensas a los usuarios más activos</p>
+                <div class="grid-morpho grid-morpho-3 mb-4">
+                    <input id="addr1" class="input-morpho" placeholder="Dirección 1: 0x...">
+                    <input id="addr2" class="input-morpho" placeholder="Dirección 2: 0x...">
+                    <input id="addr3" class="input-morpho" placeholder="Dirección 3: 0x...">
+                </div>
+                <button id="distributeIncentivesBtn" class="btn-morpho btn-morpho-accent">
+                    <i class="fas fa-gift mr-2"></i>Distribuir Incentivos
+                </button>
+            </div>
+
+            <!-- Historial de Distribuciones -->
+            <div class="morpho-card">
+                <h3 class="text-2xl font-light mb-6 flex items-center gap-3">
+                    <span class="text-3xl">🧾</span> Historial de Distribuciones
+                </h3>
+                <div id="distributionHistoryList" class="space-y-3">
+                    <p class="text-gray-400 text-sm">No hay distribuciones registradas</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Desplegar Stylus (oculta) -->
         <section id="section-deploy" class="mt-12 hidden">
             <div class="flex items-center gap-4 mb-4">
                 <h2 class="text-3xl font-bold">Desplegar Contrato Stylus</h2>

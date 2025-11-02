@@ -7,7 +7,7 @@ class MorphoParticles {
         this.baseRadius = 150;
         this.maxRadius = 600;
         this.currentRadius = 150;
-        this.particleCount = 2000;
+        this.particleCount = 5000;
         this.scrollProgress = 0;
         this.scrollAnimationDuration = 0.15;
         this.sponsorVisibilityStart = 0.3;
@@ -73,16 +73,16 @@ class MorphoParticles {
     createBackgroundParticles() {
         const bgParticleMaterial = new THREE.PointsMaterial({
             color: 0x8b5cf6,
-            size: 3,
+            size: 2.0,
             transparent: true,
-            opacity: 0.8,
+            opacity: 0.6,
             blending: THREE.AdditiveBlending,
             depthWrite: false
         });
         
         const geometry = new THREE.BufferGeometry();
         const positions = [];
-        const count = 1500;
+        const count = 6000;
         
         const velocities = [];
         
@@ -109,9 +109,9 @@ class MorphoParticles {
     createParticleSystem() {
         const particleMaterial = new THREE.PointsMaterial({
             color: 0xffffff,
-            size: 2,
+            size: 1.5,
             transparent: true,
-            opacity: 0.9,
+            opacity: 0.8,
             blending: THREE.AdditiveBlending,
             depthWrite: false,
             vertexColors: false
